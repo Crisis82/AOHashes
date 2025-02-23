@@ -43,7 +43,7 @@ cargo test --features=gmimc
 will execute `GMiMC`.
 
 > [!CAUTION]  
-> For simplicity, this library has been organized in such a way that only an hashing algorithms can be run at a time, thus if are provided more than 1 primitive features all together, it will obviusly return an error for method ambigiuty.
+> For simplicity, this library has been organized in such a way that only an hashing algorithms can be run at a time, thus if are provided more than 1 primitive features all together, it will run only the first, in alphabetical order, `{hash_name}` among the ones provided.
 
 ### Example
 
