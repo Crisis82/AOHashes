@@ -13,7 +13,7 @@ The primitives implemented are the following:
 - [Rescue](https://eprint.iacr.org/2019/426)
 - [Rescue-Prime](https://eprint.iacr.org/2020/1143)
 
-Each documentation paper is linked to the original website, plus have been stored for redundancy a copy of each under the [docs](./docs/) folder.
+Each primitive is linked to its original documentation source, plus for redundancy has been stored a copy of each paper under the [docs](./docs/) folder.
 
 ## Usage
 
