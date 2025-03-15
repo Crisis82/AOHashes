@@ -61,6 +61,7 @@ impl<'a> GriffinPi<Witness> for GadgetPermutation<'a> {
         // witness_y^5 or witness_y^7
         let constraint = Constraint::new().mult(1).a(power).b(witness_y);
         result[0] = self.composer.gate_mul(constraint);
+        result[0] = witness_y;
 
         // i = 1
         // value^D
@@ -124,67 +125,6 @@ impl<'a> GriffinPi<Witness> for GadgetPermutation<'a> {
     fn linear_layer(&mut self, state: &mut [Witness], _round: usize) {
         let mut result = [Composer::ZERO; WIDTH];
 
-        // for i in 0..WIDTH {
-        //     let constraint = match WIDTH {
-        //         3 => Constraint::new()
-        //             .left(MATRIX[i][0])
-        //             .a(state[0])
-        //             .right(MATRIX[i][1])
-        //             .b(state[1])
-        //             .fourth(MATRIX[i][2])
-        //             .d(state[2])
-        //             .constant(ROUND_CONSTANTS[round]),
-        //         4 | 8 | 12 | 16 | 20 | 24 => {
-        //             let constraint = Constraint::new()
-        //                 .left(MATRIX[i][0])
-        //                 .a(state[0])
-        //                 .right(MATRIX[i][1])
-        //                 .b(state[1])
-        //                 .fourth(MATRIX[i][2])
-        //                 .d(state[2]);
-        //             result[i] = self.composer.gate_add(constraint);
-
-        //             let mut j = 3;
-        //             while (WIDTH - j) > 2 {
-        //                 let constraint = Constraint::new()
-        //                     .left(MATRIX[i][j])
-        //                     .a(state[j])
-        //                     .right(MATRIX[i][j + 1])
-        //                     .b(state[j + 1])
-        //                     .fourth(1)
-        //                     .d(result[i]);
-        //                 result[i] = self.composer.gate_add(constraint);
-        //                 j += 2;
-        //             }
-
-        //             let constraint = match WIDTH - j {
-        //                 1 => Constraint::new()
-        //                     .left(MATRIX[i][j])
-        //                     .a(state[j])
-        //                     .right(1)
-        //                     .b(result[i])
-        //                     .constant(ROUND_CONSTANTS[round]),
-        //                 2 => Constraint::new()
-        //                     .left(MATRIX[i][j])
-        //                     .a(state[j])
-        //                     .right(MATRIX[i][j + 1])
-        //                     .b(state[j + 1])
-        //                     .fourth(1)
-        //                     .d(result[i])
-        //                     .constant(ROUND_CONSTANTS[round]),
-        //                 _ => {
-        //                     panic!("Invalid remainder.")
-        //                 }
-        //             };
-        //             constraint
-        //         }
-        //         _ => {
-        //             panic!("Invalid WIDTH.")
-        //         }
-        //     };
-        //     result[i] = self.composer.gate_add(constraint);
-        // }
-
         for i in 0..WIDTH {
             for j in 0..WIDTH {
                 let constraint = Constraint::new()
@@ -235,12 +175,10 @@ mod tests {
 
     use crate::permutation::ScalarPermutation;
 
-    // use core::result::Result;
+    use core::result::Result;
     use ff::Field;
     use rand::SeedableRng;
     use rand::rngs::StdRng;
-
-    extern crate std;
 
     #[derive(Default)]
     struct TestCircuit {
@@ -250,25 +188,18 @@ mod tests {
 
     impl Circuit for TestCircuit {
         fn circuit(&self, composer: &mut Composer) -> Result<(), Error> {
-            let zero = Composer::ZERO;
-
-            let mut perm: [Witness; WIDTH] = [zero; WIDTH];
-
-            let mut i_wit: [Witness; WIDTH] = [zero; WIDTH];
+            let mut i_wit: [Witness; WIDTH] = [Composer::ZERO; WIDTH];
             self.i.iter().zip(i_wit.iter_mut()).for_each(|(i, w)| {
                 *w = composer.append_witness(*i);
             });
 
-            let mut o_wit: [Witness; WIDTH] = [zero; WIDTH];
+            let mut o_wit: [Witness; WIDTH] = [Composer::ZERO; WIDTH];
             self.o.iter().zip(o_wit.iter_mut()).for_each(|(o, w)| {
                 *w = composer.append_witness(*o);
             });
 
             // Apply gadget permutation.
             GadgetPermutation::new(composer).permute(&mut i_wit);
-
-            // Copy the result of the permutation into the perm.
-            perm.copy_from_slice(&i_wit);
 
             // Check that the Gadget perm results = BlsScalar perm results
             i_wit.iter().zip(o_wit.iter()).for_each(|(p, o)| {
@@ -299,7 +230,7 @@ mod tests {
 
     /// Setup the test circuit prover and verifier
     fn setup() -> Result<(Prover, Verifier), Error> {
-        const CAPACITY: usize = 1 << 10;
+        const CAPACITY: usize = 1 << 12;
 
         let mut rng = StdRng::seed_from_u64(0xbeef);
 
@@ -329,10 +260,6 @@ mod tests {
 
     #[test]
     fn preimage_constant() -> Result<(), Error> {
-        unsafe {
-            std::env::set_var("RUST_BACKTRACE", "1");
-        }
-
         let (prover, verifier) = setup()?;
 
         // Prepare input & output

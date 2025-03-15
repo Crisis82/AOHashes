@@ -41,12 +41,7 @@ impl RescueHash<BlsScalar> for ScalarPermutation {
             .for_each(|scalar| *scalar = scalar.pow_vartime(&*ALPHA_INV));
     }
 
-    fn linear_layer(
-        &mut self,
-        state: &mut [BlsScalar],
-        _round: usize,
-        _offset: usize,
-    ) {
+    fn linear_layer(&mut self, state: &mut [BlsScalar]) {
         let mut result = [BlsScalar::zero(); WIDTH];
 
         for (j, scalar) in state.iter().enumerate() {

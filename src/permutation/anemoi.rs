@@ -4,7 +4,7 @@ use lazy_static::lazy_static;
 
 /// Single state width.
 /// Can have value 1, 2, 3, 4, 6, 8.
-pub(crate) const L: usize = 1;
+pub(crate) const L: usize = 4;
 
 /// Total state width, which corresponds to the
 /// concatenation of two single states X and Y of width L.

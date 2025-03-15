@@ -333,7 +333,7 @@ mod tests {
 
     /// Setup the test circuit prover and verifier
     fn setup() -> Result<(Prover, Verifier), Error> {
-        const CAPACITY: usize = 1 << 10;
+        const CAPACITY: usize = 1 << 12;
 
         let mut rng = StdRng::seed_from_u64(0xbeef);
 

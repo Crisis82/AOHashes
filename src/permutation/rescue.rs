@@ -4,7 +4,7 @@ use lazy_static::lazy_static;
 
 /// State width, with possible values:
 /// 3, 4, 5, 6, 8, 12, 16, 20 or 24.
-pub const WIDTH: usize = 6;
+pub const WIDTH: usize = 4;
 
 /// Number of rounds, depending on width.
 pub(crate) const ROUNDS: usize = {
@@ -51,7 +51,7 @@ pub(crate) trait RescueHash<T> {
     fn sbox_inv_layer(&mut self, state: &mut [T]);
 
     /// Matrix-vector multiplication with the MDS matrix.
-    fn linear_layer(&mut self, state: &mut [T], round: usize, offset: usize);
+    fn linear_layer(&mut self, state: &mut [T]);
 
     /// Adds the round constants to the state.
     fn constant_injection(
@@ -76,12 +76,12 @@ pub(crate) trait RescueHash<T> {
     fn apply_round(&mut self, round: usize, state: &mut [T]) {
         // first half
         self.sbox_inv_layer(state);
-        self.linear_layer(state, round, 0);
+        self.linear_layer(state);
         self.constant_injection(state, round, 0);
 
         // second half
         self.sbox_layer(state);
-        self.linear_layer(state, round, WIDTH);
+        self.linear_layer(state);
         self.constant_injection(state, round, WIDTH);
     }
 

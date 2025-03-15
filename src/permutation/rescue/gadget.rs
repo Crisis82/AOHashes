@@ -68,80 +68,13 @@ impl<'a> RescueHash<Witness> for GadgetPermutation<'a> {
             // witness_y^5
             let constraint = Constraint::new().mult(1).a(power4).b(witness_y);
             state[i] = self.composer.gate_mul(constraint);
+            state[i] = witness_y;
         }
     }
 
-    fn linear_layer(
-        &mut self,
-        state: &mut [Witness],
-        _round: usize,
-        _offset: usize,
-    ) {
+    fn linear_layer(&mut self, state: &mut [Witness]) {
         let mut result = [Composer::ZERO; WIDTH];
 
-        // Optimized implementaton for possible WIDTHs
-        // for i in 0..WIDTH {
-        //     let constraint = match WIDTH {
-        //         3 => Constraint::new()
-        //             .left(MDS_MATRIX[i][0])
-        //             .a(state[0])
-        //             .right(MDS_MATRIX[i][1])
-        //             .b(state[1])
-        //             .fourth(MDS_MATRIX[i][2])
-        //             .d(state[2])
-        //             .constant(ROUND_CONSTANTS[round][i + offset]),
-        //         4 | 5 | 8 | 12 | 16 | 20 | 24 => {
-        //             let constraint = Constraint::new()
-        //                 .left(MDS_MATRIX[i][0])
-        //                 .a(state[0])
-        //                 .right(MDS_MATRIX[i][1])
-        //                 .b(state[1])
-        //                 .fourth(MDS_MATRIX[i][2])
-        //                 .d(state[2]);
-        //             result[i] = self.composer.gate_add(constraint);
-
-        //             let mut j = 3;
-        //             while (WIDTH - j) > 2 {
-        //                 let constraint = Constraint::new()
-        //                     .left(MDS_MATRIX[i][j])
-        //                     .a(state[j])
-        //                     .right(MDS_MATRIX[i][j + 1])
-        //                     .b(state[j + 1])
-        //                     .fourth(1)
-        //                     .d(result[i]);
-        //                 result[i] = self.composer.gate_add(constraint);
-        //                 j += 2;
-        //             }
-
-        //             let constraint = match WIDTH - j {
-        //                 1 => Constraint::new()
-        //                     .left(MDS_MATRIX[i][j])
-        //                     .a(state[j])
-        //                     .right(1)
-        //                     .b(result[i])
-        //                     .constant(ROUND_CONSTANTS[round][i + offset]),
-        //                 2 => Constraint::new()
-        //                     .left(MDS_MATRIX[i][j])
-        //                     .a(state[j])
-        //                     .right(MDS_MATRIX[i][j + 1])
-        //                     .b(state[j + 1])
-        //                     .fourth(1)
-        //                     .d(result[i])
-        //                     .constant(ROUND_CONSTANTS[round][i + offset]),
-        //                 _ => {
-        //                     panic!("Invalid remainder.")
-        //                 }
-        //             };
-        //             constraint
-        //         }
-        //         _ => {
-        //             panic!("Invalid WIDTH.")
-        //         }
-        //     };
-        //     result[i] = self.composer.gate_add(constraint);
-        // }
-
-        // General WIDTH size implementation
         for i in 0..WIDTH {
             for j in 0..WIDTH {
                 let constraint = Constraint::new()
@@ -162,10 +95,6 @@ impl<'a> RescueHash<Witness> for GadgetPermutation<'a> {
         round: usize,
         offset: usize,
     ) {
-        // Commented out since the constant injection is included
-        // in the linear layer, to optimize the number of addition gates.
-
-        // General WIDTH size implementation
         let mut result = [Composer::ZERO; WIDTH];
         result.copy_from_slice(&state);
         for i in 0..WIDTH {
@@ -251,7 +180,6 @@ mod tests {
         let mut input = [BlsScalar::zero(); WIDTH];
 
         let mut rng = StdRng::seed_from_u64(0xbeef);
-        // let mut rng = StdRng::from_entropy();
 
         input
             .iter_mut()
@@ -267,7 +195,7 @@ mod tests {
 
     /// Setup the test circuit prover and verifier
     fn setup() -> Result<(Prover, Verifier), Error> {
-        const CAPACITY: usize = 1 << 10;
+        const CAPACITY: usize = 1 << 12;
 
         let mut rng = StdRng::seed_from_u64(0xbeef);
 

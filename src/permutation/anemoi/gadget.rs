@@ -97,10 +97,10 @@ impl<'a> AnemoiHash<Witness> for GadgetPermutation<'a> {
             let constraint = Constraint::new()
                 .left(1)
                 .a(state[i])
-                .mult(G.neg())
+                .mult(-G)
                 .a(state[i + L])
                 .b(state[i + L])
-                .constant((*G_INV).neg());
+                .constant(-(*G_INV));
             state[i] = self.composer.gate_add(constraint);
 
             // x_i^alpha_inv
@@ -127,12 +127,13 @@ impl<'a> AnemoiHash<Witness> for GadgetPermutation<'a> {
             // value^5 or value^7
             let constraint = Constraint::new().mult(1).a(power).b(witness_y);
             state[i] = self.composer.gate_mul(constraint);
+            // state[i] = witness_y;
 
             // y_i = y_i - x_i^alpha_inv
             let constraint = Constraint::new()
                 .left(1)
                 .a(state[i + L])
-                .right(BlsScalar::from(1).neg())
+                .right(-BlsScalar::from(1))
                 .b(state[i]);
             state[i + L] = self.composer.gate_add(constraint);
 
@@ -235,7 +236,7 @@ mod tests {
 
     /// Setup the test circuit prover and verifier
     fn setup() -> Result<(Prover, Verifier), Error> {
-        const CAPACITY: usize = 1 << 10;
+        const CAPACITY: usize = 1 << 12;
 
         let mut rng = StdRng::seed_from_u64(0xbeef);
 
