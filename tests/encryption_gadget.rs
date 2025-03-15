@@ -14,7 +14,7 @@ use rand::rngs::StdRng;
 static PUB_PARAMS: Lazy<PublicParameters> = Lazy::new(|| {
     let mut rng = StdRng::seed_from_u64(0xfab);
 
-    const CAPACITY: usize = 13;
+    const CAPACITY: usize = 16;
     PublicParameters::setup(1 << CAPACITY, &mut rng)
         .expect("Setup of public params should pass")
 });

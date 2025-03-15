@@ -12,7 +12,7 @@ use ff::Field;
 static PUB_PARAMS: Lazy<PublicParameters> = Lazy::new(|| {
     let mut rng = StdRng::seed_from_u64(0xbeef);
 
-    const CAPACITY: usize = 12;
+    const CAPACITY: usize = 16;
     PublicParameters::setup(1 << CAPACITY, &mut rng)
         .expect("Setup of public params should pass")
 });

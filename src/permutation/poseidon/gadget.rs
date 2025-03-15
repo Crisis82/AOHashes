@@ -9,7 +9,7 @@ use dusk_plonk::prelude::*;
 use dusk_safe::Safe;
 
 use super::Hades;
-use crate::poseidon::{MDS_MATRIX, ROUND_CONSTANTS, ROUNDS, WIDTH};
+use crate::poseidon::{MDS_MATRIX, ROUND_CONSTANTS, WIDTH};
 
 /// An implementation for the [`Hades`] permutation operating on [`Witness`]es.
 /// Requires a reference to a plonk circuit [`Composer`].
@@ -48,19 +48,14 @@ impl<'a> Hades<Witness> for GadgetPermutation<'a> {
         round: usize,
         state: &mut [Witness; WIDTH],
     ) {
-        // To save constraints we only add the constants here in the first
-        // round. The remaining constants will be added in the matrix
-        // multiplication.
-        if round == 0 {
-            state.iter_mut().enumerate().for_each(|(i, w)| {
-                let constraint = Constraint::new()
-                    .left(1)
-                    .a(*w)
-                    .constant(ROUND_CONSTANTS[0][i]);
+        state.iter_mut().enumerate().for_each(|(i, w)| {
+            let constraint = Constraint::new()
+                .left(1)
+                .a(*w)
+                .constant(ROUND_CONSTANTS[round][i]);
 
-                *w = self.composer.gate_add(constraint);
-            });
-        }
+            *w = self.composer.gate_add(constraint);
+        });
     }
 
     fn quintic_s_box(&mut self, witness: &mut Witness) {
@@ -75,82 +70,19 @@ impl<'a> Hades<Witness> for GadgetPermutation<'a> {
     }
 
     /// Adds a constraint for each matrix coefficient multiplication
-    fn mul_matrix(&mut self, round: usize, state: &mut [Witness; WIDTH]) {
+    fn mul_matrix(&mut self, state: &mut [Witness; WIDTH]) {
         let mut result = [Composer::ZERO; WIDTH];
 
-        // Implementation optimized for all possible WIDTH values
+        // General WIDTH size implementation
         for i in 0..WIDTH {
-            // c is the next round's constant and hence zero
-            // for the last round.
-            let c = match round + 1 < ROUNDS {
-                true => ROUND_CONSTANTS[round + 1][i],
-                false => BlsScalar::zero(),
-            };
-
-            let constraint = match WIDTH {
-                2 => Constraint::new()
-                    .left(MDS_MATRIX[i][0])
-                    .a(state[0])
-                    .right(MDS_MATRIX[i][1])
-                    .b(state[1])
-                    .constant(c),
-                3 => Constraint::new()
-                    .left(MDS_MATRIX[i][0])
-                    .a(state[0])
-                    .right(MDS_MATRIX[i][1])
-                    .b(state[1])
-                    .fourth(MDS_MATRIX[i][2])
-                    .d(state[2])
-                    .constant(c),
-                4 | 5 | 8 | 12 | 16 | 20 | 24 => {
-                    let constraint = Constraint::new()
-                        .left(MDS_MATRIX[i][0])
-                        .a(state[0])
-                        .right(MDS_MATRIX[i][1])
-                        .b(state[1])
-                        .fourth(MDS_MATRIX[i][2])
-                        .d(state[2]);
-                    result[i] = self.composer.gate_add(constraint);
-
-                    let mut j = 3;
-                    while (WIDTH - j) > 2 {
-                        let constraint = Constraint::new()
-                            .left(MDS_MATRIX[i][j])
-                            .a(state[j])
-                            .right(MDS_MATRIX[i][j + 1])
-                            .b(state[j + 1])
-                            .fourth(1)
-                            .d(result[i]);
-                        result[i] = self.composer.gate_add(constraint);
-                        j += 2;
-                    }
-
-                    let constraint = match WIDTH - j {
-                        1 => Constraint::new()
-                            .left(MDS_MATRIX[i][j])
-                            .a(state[j])
-                            .right(1)
-                            .b(result[i])
-                            .constant(c),
-                        2 => Constraint::new()
-                            .left(MDS_MATRIX[i][j])
-                            .a(state[j])
-                            .right(MDS_MATRIX[i][j + 1])
-                            .b(state[j + 1])
-                            .fourth(1)
-                            .d(result[i])
-                            .constant(c),
-                        _ => {
-                            panic!("Invalid remainder.")
-                        }
-                    };
-                    constraint
-                }
-                _ => {
-                    panic!("Invalid WIDTH.")
-                }
-            };
-            result[i] = self.composer.gate_add(constraint);
+            for j in 0..WIDTH {
+                let constraint = Constraint::new()
+                    .left(1)
+                    .a(result[i])
+                    .right(MDS_MATRIX[i][j])
+                    .b(state[j]);
+                result[i] = self.composer.gate_add(constraint);
+            }
         }
 
         state.copy_from_slice(&result);
@@ -244,7 +176,7 @@ mod tests {
 
     /// Setup the test circuit prover and verifier
     fn setup() -> Result<(Prover, Verifier), Error> {
-        const CAPACITY: usize = 1 << 10;
+        const CAPACITY: usize = 1 << 14;
 
         let mut rng = StdRng::seed_from_u64(0xbeef);
 

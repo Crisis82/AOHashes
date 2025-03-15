@@ -1,4 +1,5 @@
 use aohashes::{decrypt, decrypt_gadget, encrypt};
+use core::time::Duration;
 use criterion::{Criterion, black_box, criterion_group, criterion_main};
 use dusk_bls12_381::BlsScalar;
 use dusk_jubjub::{GENERATOR_EXTENDED, JubJubAffine, JubJubScalar};
@@ -9,12 +10,19 @@ use once_cell::sync::Lazy;
 use rand::SeedableRng;
 use rand::rngs::StdRng;
 
+cfg_if::cfg_if! {
+    if #[cfg(any(feature = "anemoi", feature = "arion", feature = "griffin", feature = "poseidon", feature = "rescue", feature = "rescue_prime"))] {
+        const CAPACITY: usize = 11;
+    } else if #[cfg(feature = "gmimc")] {
+        const CAPACITY: usize = 16;
+    }
+}
+
 const MESSAGE_LEN: usize = 2;
 
 static PUB_PARAMS: Lazy<PublicParameters> = Lazy::new(|| {
     let mut rng = StdRng::seed_from_u64(0xfab);
 
-    const CAPACITY: usize = 11;
     PublicParameters::setup(1 << CAPACITY, &mut rng)
         .expect("Setup of public params should pass")
 });
@@ -127,6 +135,7 @@ fn bench_decryption(c: &mut Criterion) {
 criterion_group! {
     name = benches;
     config = Criterion::default().sample_size(10);
+    // config = Criterion::default().sample_size(100).measurement_time(Duration::from_secs(100));
     targets = bench_decryption
 }
 criterion_main!(benches);

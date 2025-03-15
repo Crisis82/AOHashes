@@ -1,27 +1,34 @@
-use aohashes::{Domain, Hash, HashGadget, WIDTH};
+use aohashes::{Domain, Hash, HashGadget};
+use core::time::Duration;
 use criterion::{Criterion, black_box, criterion_group, criterion_main};
 use dusk_plonk::prelude::*;
 use ff::Field;
 use rand::SeedableRng;
 use rand::rngs::StdRng;
 
-const CAPACITY: usize = 11;
+cfg_if::cfg_if! {
+    if #[cfg(any(feature = "anemoi", feature = "arion", feature = "griffin", feature = "poseidon", feature = "rescue", feature = "rescue_prime"))] {
+        const CAPACITY: usize = 11;
+    } else if #[cfg(feature = "gmimc")] {
+        const CAPACITY: usize = 16;
+    }
+}
 
 #[derive(Default)]
 struct SpongeCircuit {
-    message: [BlsScalar; WIDTH - 1],
+    message: [BlsScalar; 4],
     output: BlsScalar,
 }
 
 impl SpongeCircuit {
-    pub fn new(message: [BlsScalar; WIDTH - 1], output: BlsScalar) -> Self {
+    pub fn new(message: [BlsScalar; 4], output: BlsScalar) -> Self {
         SpongeCircuit { message, output }
     }
 }
 
 impl Circuit for SpongeCircuit {
     fn circuit(&self, composer: &mut Composer) -> Result<(), Error> {
-        let mut w_message = [Composer::ZERO; WIDTH - 1];
+        let mut w_message = [Composer::ZERO; 4];
         w_message
             .iter_mut()
             .zip(self.message)
@@ -46,12 +53,7 @@ fn bench_sponge(c: &mut Criterion) {
     let (prover, verifier) = Compiler::compile::<SpongeCircuit>(&pp, label)
         .expect("Circuit should compile successfully");
     let mut proof = Proof::default();
-    let message = [
-        BlsScalar::random(&mut rng),
-        BlsScalar::random(&mut rng),
-        BlsScalar::random(&mut rng),
-        BlsScalar::random(&mut rng),
-    ];
+    let message = [BlsScalar::random(&mut rng); 4];
     let public_inputs = Hash::digest(Domain::Merkle4, &message);
     let circuit = SpongeCircuit::new(message, public_inputs[0]);
 
@@ -84,6 +86,8 @@ fn bench_sponge(c: &mut Criterion) {
 criterion_group! {
     name = benches;
     config = Criterion::default().sample_size(10);
+    // usually 100s are fine, maybe gmimc needs 2000s
+    // config = Criterion::default().sample_size(100).measurement_time(Duration::from_secs(100));
     targets = bench_sponge
 }
 criterion_main!(benches);

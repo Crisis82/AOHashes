@@ -19,7 +19,7 @@ use lazy_static::lazy_static;
 /// State width t.
 /// It can be 2, 3, 4, 5, 8, 12, 16, 20, 24.
 /// Default is 5.
-pub const WIDTH: usize = 5;
+pub const WIDTH: usize = 4;
 
 /// Number of full rounds.
 const FULL_ROUNDS: usize = 8;
@@ -82,7 +82,7 @@ pub(crate) trait Hades<T> {
     fn quintic_s_box(&mut self, value: &mut T);
 
     /// Multiply the MDS matrix with the state.
-    fn mul_matrix(&mut self, round: usize, state: &mut [T; WIDTH]);
+    fn mul_matrix(&mut self, state: &mut [T; WIDTH]);
 
     /// Applies a `Partial Round` also known as a `Partial S-Box layer` to a set
     /// of inputs.
@@ -101,7 +101,7 @@ pub(crate) trait Hades<T> {
         self.quintic_s_box(&mut state[WIDTH - 1]);
 
         // Multiply this result by the MDS matrix
-        self.mul_matrix(round, state);
+        self.mul_matrix(state);
     }
 
     /// Applies a `Full Round` also known as a `Full S-Box layer` to a set of
@@ -121,7 +121,7 @@ pub(crate) trait Hades<T> {
         state.iter_mut().for_each(|w| self.quintic_s_box(w));
 
         // Multiply this result by the MDS matrix
-        self.mul_matrix(round, state);
+        self.mul_matrix(state);
     }
 
     /// Applies one Hades permutation.

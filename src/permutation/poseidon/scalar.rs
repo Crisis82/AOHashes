@@ -50,7 +50,7 @@ impl Hades<BlsScalar> for ScalarPermutation {
         *scalar = scalar.square().square() * *scalar;
     }
 
-    fn mul_matrix(&mut self, _round: usize, state: &mut [BlsScalar; WIDTH]) {
+    fn mul_matrix(&mut self, state: &mut [BlsScalar; WIDTH]) {
         let mut result = [BlsScalar::zero(); WIDTH];
 
         for i in 0..WIDTH {
