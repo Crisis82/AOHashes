@@ -17,9 +17,9 @@ use dusk_bls12_381::BlsScalar;
 use lazy_static::lazy_static;
 
 /// State width t.
-/// It can be 2, 3, 4, 5, 8, 12, 16, 20, 24.
+/// It can be 2, 3, 4, 5, 6, 8, 12, 16, 20, 24.
 /// Default is 5.
-pub const WIDTH: usize = 4;
+pub const WIDTH: usize = 8;
 
 /// Number of full rounds.
 const FULL_ROUNDS: usize = 8;
@@ -28,7 +28,7 @@ const FULL_ROUNDS: usize = 8;
 const PARTIAL_ROUNDS: usize = {
     match WIDTH {
         2 | 3 => 57,
-        4 | 5 | 8 | 12 | 16 | 20 | 24 => 60,
+        4 | 5 | 6 | 8 | 12 | 16 | 20 | 24 => 60,
         _ => panic!("Invalid width"),
     }
 };

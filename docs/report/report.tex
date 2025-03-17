@@ -1,0 +1,40 @@
+\documentclass[12pt, a4paper]{report}
+
+\input{preamble}
+
+\title{{\textbf{AOHashes}}\\[20pt]\textsl{AO privacy-friendly primitives testing\\over Dusk-Plonk ZK library}}
+\author{\Large{Filippo Merlo}}
+\date{\textit{March 2025}}
+
+\begin{document}
+
+\maketitle
+\newpage
+\pdfbookmark[section]{\contentsname}{toc}
+\tableofcontents
+\pagebreak
+
+\chapter{Introduction}\label{chap:intro}
+
+In few years, the interest in the cryptographic community has grown a lot towards the Zero-Knowledge (ZK) proofs. In fact, the goal of ZK proofs is to provide a way to prove the correctness of a computation without revealing any information about the data involved in the computation itself. Among the types of ZK proofs, there are the non-interactive ones, which are used in environments where prover and verifier are not able to communicate with each other, like in blockchains. In this paper, the ZK system used for the proofs is the PLONK system, which belongs to the SNARK\footnote{Succinct Non-interactive ARguments of Knowledge} family, and has its own structure for the computation of the proofs based initially on arithmetic circuits, which are translated into constraints ones and finally evaluated as polynomials. This structure allows the use of more powerful gates, while maintaining the computational complexity low.
+However, having an internal structure like this means that old cryptographic primitives are not suitable and adapted for these computations, leading to huge losses in terms of performance and efficiency. Therefore, this strong interested in ZK has shaped the development of new cryptographic primitives towards the so-called Arithmetization-Oriented (AO) ones, aiming to provide better and more efficient solutions that could exploit as much as possible the power of ZK proofs, by maintaining a complexity as low as possible from a constraints' perspective (i.e. additions and multiplications). For this reason we wrote this paper with the aim of shading some light on the different performances of the latest and most promising AO primitives proposed in these last years.
+
+\chapter{Primitives}\label{chap:primitives}
+
+\section{Implementation}\label{chap:implementation}
+
+\chapter{Tests}\label{chap:tests}
+
+\section{Environment}\label{sec:environment}
+
+\section{Constraints}\label{sec:constraints}
+
+\section{Plain execution}\label{sec:plain}
+
+\section{Proof generation}\label{sec:proofgen}
+
+\section{Proof verification}\label{sec:proofver}
+
+\chapter{Conclusion}\label{chap:conclusion}
+
+\end{document}

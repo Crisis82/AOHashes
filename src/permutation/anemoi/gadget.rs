@@ -54,17 +54,17 @@ impl<'a> AnemoiHash<Witness> for GadgetPermutation<'a> {
         for i in 0..L {
             for j in 0..L {
                 let constraint = Constraint::new()
-                    .left(MATRIX_X[i][j])
-                    .a(state[j])
-                    .right(1)
-                    .b(result[i]);
+                    .left(1)
+                    .a(result[i])
+                    .right(MATRIX_X[i][j])
+                    .b(state[j]);
                 result[i] = self.composer.gate_add(constraint);
 
                 let constraint = Constraint::new()
-                    .left(MATRIX_Y[i][j])
-                    .a(state[j + L])
-                    .right(1)
-                    .b(result[i + L]);
+                    .left(1)
+                    .a(result[i + L])
+                    .right(MATRIX_Y[i][j])
+                    .b(state[j + L]);
                 result[i + L] = self.composer.gate_add(constraint);
             }
         }
@@ -73,6 +73,7 @@ impl<'a> AnemoiHash<Witness> for GadgetPermutation<'a> {
     }
 
     fn pht(&mut self, state: &mut [Witness]) {
+        // Applies Y <- Y + X
         for i in L..WIDTH {
             let constraint = Constraint::new()
                 .left(1)
@@ -81,6 +82,8 @@ impl<'a> AnemoiHash<Witness> for GadgetPermutation<'a> {
                 .b(state[i - L]);
             state[i] = self.composer.gate_add(constraint);
         }
+
+        // Applies X <- X + Y
         for i in 0..L {
             let constraint = Constraint::new()
                 .left(1)
@@ -95,11 +98,11 @@ impl<'a> AnemoiHash<Witness> for GadgetPermutation<'a> {
         for i in 0..L {
             // x_i = x_i - g * y_i^2 - g_inv
             let constraint = Constraint::new()
-                .left(1)
-                .a(state[i])
                 .mult(-G)
                 .a(state[i + L])
                 .b(state[i + L])
+                .fourth(1)
+                .d(state[i])
                 .constant(-(*G_INV));
             state[i] = self.composer.gate_add(constraint);
 
@@ -127,7 +130,6 @@ impl<'a> AnemoiHash<Witness> for GadgetPermutation<'a> {
             // value^5 or value^7
             let constraint = Constraint::new().mult(1).a(power).b(witness_y);
             state[i] = self.composer.gate_mul(constraint);
-            // state[i] = witness_y;
 
             // y_i = y_i - x_i^alpha_inv
             let constraint = Constraint::new()
@@ -137,13 +139,15 @@ impl<'a> AnemoiHash<Witness> for GadgetPermutation<'a> {
                 .b(state[i]);
             state[i + L] = self.composer.gate_add(constraint);
 
+            state[i] = witness_y;
+
             // x_i = x_i + g * y_i^2
             let constraint = Constraint::new()
-                .left(1)
-                .a(state[i])
                 .mult(G)
                 .a(state[i + L])
-                .b(state[i + L]);
+                .b(state[i + L])
+                .fourth(1)
+                .d(state[i]);
             state[i] = self.composer.gate_add(constraint);
         }
     }

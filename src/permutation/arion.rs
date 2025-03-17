@@ -4,7 +4,7 @@ use lazy_static::lazy_static;
 
 /// State width.
 /// Can have value 3, 4, 5, 6, 8
-pub const WIDTH: usize = 4;
+pub const WIDTH: usize = 8;
 
 /// D1 s-box exponent: smallest positive integer coprime with Q−1.
 /// Usually have value 3 or 5.

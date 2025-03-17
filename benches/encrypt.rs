@@ -1,5 +1,5 @@
 use aohashes::{encrypt, encrypt_gadget};
-use core::time::Duration;
+// use core::time::Duration;
 use criterion::{Criterion, black_box, criterion_group, criterion_main};
 use dusk_bls12_381::BlsScalar;
 use dusk_jubjub::{GENERATOR_EXTENDED, JubJubAffine, JubJubScalar};

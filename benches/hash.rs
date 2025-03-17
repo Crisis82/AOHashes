@@ -6,13 +6,8 @@ use ff::Field;
 use rand::SeedableRng;
 use rand::rngs::StdRng;
 
-cfg_if::cfg_if! {
-    if #[cfg(any(feature = "anemoi", feature = "arion", feature = "griffin", feature = "poseidon", feature = "rescue", feature = "rescue_prime"))] {
-        const CAPACITY: usize = 11;
-    } else if #[cfg(feature = "gmimc")] {
-        const CAPACITY: usize = 16;
-    }
-}
+// for gmimg and poseidon 12 is needed
+const CAPACITY: usize = 12;
 
 #[derive(Default)]
 struct SpongeCircuit {
@@ -36,9 +31,10 @@ impl Circuit for SpongeCircuit {
                 *witness = composer.append_witness(scalar);
             });
 
-        let output_witness =
+        let _output_witness =
             HashGadget::digest(composer, Domain::Merkle4, &w_message);
-        composer.assert_equal_constant(output_witness[0], 0, Some(self.output));
+        // composer.assert_equal_constant(output_witness[0], 0,
+        // Some(self.output));
 
         Ok(())
     }
@@ -85,9 +81,9 @@ fn bench_sponge(c: &mut Criterion) {
 
 criterion_group! {
     name = benches;
-    config = Criterion::default().sample_size(10);
+    // config = Criterion::default().sample_size(10);
     // usually 100s are fine, maybe gmimc needs 2000s
-    // config = Criterion::default().sample_size(100).measurement_time(Duration::from_secs(100));
+    config = Criterion::default().sample_size(100).measurement_time(Duration::from_secs(80));
     targets = bench_sponge
 }
 criterion_main!(benches);

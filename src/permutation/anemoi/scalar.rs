@@ -65,9 +65,9 @@ impl AnemoiHash<BlsScalar> for ScalarPermutation {
     fn sbox_layer(&mut self, state: &mut [BlsScalar]) {
         for i in 0..L {
             // x_i = x_i - g * y_i^2 - g_inv
-            state[i] -= G * (state[i + L].square()) + *G_INV;
+            state[i] = state[i] - G * (state[i + L].square()) - *G_INV;
             // y_i = y_i - x_i^alpha_inv
-            state[i + L] -= state[i].pow(&ALPHA_INV);
+            state[i + L] -= state[i].pow_vartime(&ALPHA_INV);
             // x_i = x_i + g * y_i^2
             state[i] += G * (state[i + L].square());
         }
