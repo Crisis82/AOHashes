@@ -21,6 +21,19 @@ However, having an internal structure like this means that old cryptographic pri
 
 \chapter{Primitives}\label{chap:primitives}
 
+The primitives that have been implemented and tested in this project are:
+\begin{itemize}
+  \item \texttt{Poseidon}
+  \item \texttt{GMiMC}
+  \item \texttt{Rescue}
+  \item \texttt{Rescue-Prime}
+  \item \texttt{Griffin}
+  \item \texttt{Anemoi}
+  \item \texttt{Arion}
+\end{itemize}
+
+We can split them into two categories: in the \textit{first category} we found those that have been designed for maintaining the \textbf{degree of polynomials} as \textbf{low} as possible, while having a high number of rounds to achieve a minimum level of bits security, which are \texttt{Poseidon}, \texttt{GMiMC}, \texttt{Rescue} and \texttt{Rescue-Prime}, while in the \textit{second} one has been used the opposite strategy, i.e. achieving efficiency maintaining a \textbf{low number of rounds}, but increasing exponentially the polynomial degree with the introduction of multiplicative inverses, and these primitives are \texttt{Griffin}, \texttt{Anemoi} and \texttt{Arion}.
+
 \section{Implementation}\label{chap:implementation}
 
 \chapter{Tests}\label{chap:tests}

@@ -7,8 +7,9 @@ use rand::SeedableRng;
 use rand::rngs::StdRng;
 
 // for gmimg and poseidon 12 is needed
-const CAPACITY: usize = 12;
+const CAPACITY: usize = 11;
 
+#[allow(dead_code)]
 #[derive(Default)]
 struct SpongeCircuit {
     message: [BlsScalar; 4],
@@ -31,10 +32,9 @@ impl Circuit for SpongeCircuit {
                 *witness = composer.append_witness(scalar);
             });
 
-        let _output_witness =
+        let output_witness =
             HashGadget::digest(composer, Domain::Merkle4, &w_message);
-        // composer.assert_equal_constant(output_witness[0], 0,
-        // Some(self.output));
+        composer.assert_equal_constant(output_witness[0], 0, Some(self.output));
 
         Ok(())
     }
@@ -83,7 +83,7 @@ criterion_group! {
     name = benches;
     // config = Criterion::default().sample_size(10);
     // usually 100s are fine, maybe gmimc needs 2000s
-    config = Criterion::default().sample_size(100).measurement_time(Duration::from_secs(80));
+    config = Criterion::default().sample_size(100).measurement_time(Duration::from_secs(140));
     targets = bench_sponge
 }
 criterion_main!(benches);
