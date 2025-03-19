@@ -19,7 +19,12 @@
 In few years, the interest in the cryptographic community has grown a lot towards the Zero-Knowledge (ZK) proofs. In fact, the goal of ZK proofs is to provide a way to prove the correctness of a computation without revealing any information about the data involved in the computation itself. Among the types of ZK proofs, there are the non-interactive ones, which are used in environments where prover and verifier are not able to communicate with each other, like in blockchains. In this paper, the ZK system used for the proofs is the PLONK system, which belongs to the SNARK\footnote{Succinct Non-interactive ARguments of Knowledge} family, and has its own structure for the computation of the proofs based initially on arithmetic circuits, which are translated into constraints ones and finally evaluated as polynomials. This structure allows the use of more powerful gates, while maintaining the computational complexity low.
 However, having an internal structure like this means that old cryptographic primitives are not suitable and adapted for these computations, leading to huge losses in terms of performance and efficiency. Therefore, this strong interested in ZK has shaped the development of new cryptographic primitives towards the so-called Arithmetization-Oriented (AO) ones, aiming to provide better and more efficient solutions that could exploit as much as possible the power of ZK proofs, by maintaining a complexity as low as possible from a constraints' perspective (i.e. additions and multiplications). For this reason we wrote this paper with the aim of shading some light on the different performances of the latest and most promising AO primitives proposed in these last years.
 
-\chapter{Primitives}\label{chap:primitives}
+\chapter{Overview}\label{chap:overview}
+
+Talk about AO
+
+
+\section{Primitives}\label{sec:primitives}
 
 The primitives that have been implemented and tested in this project are:
 \begin{itemize}
@@ -34,7 +39,29 @@ The primitives that have been implemented and tested in this project are:
 
 We can split them into two categories: in the \textit{first category} we found those that have been designed for maintaining the \textbf{degree of polynomials} as \textbf{low} as possible, while having a high number of rounds to achieve a minimum level of bits security, which are \texttt{Poseidon}, \texttt{GMiMC}, \texttt{Rescue} and \texttt{Rescue-Prime}, while in the \textit{second} one has been used the opposite strategy, i.e. achieving efficiency maintaining a \textbf{low number of rounds}, but increasing exponentially the polynomial degree with the introduction of multiplicative inverses, and these primitives are \texttt{Griffin}, \texttt{Anemoi} and \texttt{Arion}.
 
-\section{Implementation}\label{chap:implementation}
+\subsection{Poseidon}\label{subsec:poseidon}
+
+\subsection{GMiMC}\label{subsec:gmimc}
+
+\subsection{Rescue}\label{subsec:rescue}
+
+\subsection{Rescue-Prime}\label{subsec:rescueprime}
+
+\subsection{Griffin}\label{subsec:griffin}
+
+\subsection{Anemoi}\label{subsec:anemoi}
+
+\subsection{Arion}\label{subsec:arion}
+
+\section{Plonk}
+
+Plonk and plonk arithmetic
+
+\section{Implementation}\label{sec:implementation}
+
+All the primitives mentioned above have been implemented completely in Rust language
+
+\subsection{Dusk-Plonk}\label{subsec:duskplonk}
 
 \chapter{Tests}\label{chap:tests}
 
