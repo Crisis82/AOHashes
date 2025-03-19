@@ -23,13 +23,14 @@ However, having an internal structure like this means that old cryptographic pri
 
 Talk about AO
 
+Curve chosen BLS12-381
 
 \section{Primitives}\label{sec:primitives}
 
 The primitives that have been implemented and tested in this project are:
 \begin{itemize}
-  \item \texttt{Poseidon}
   \item \texttt{GMiMC}
+  \item \texttt{Poseidon}
   \item \texttt{Rescue}
   \item \texttt{Rescue-Prime}
   \item \texttt{Griffin}
@@ -37,11 +38,58 @@ The primitives that have been implemented and tested in this project are:
   \item \texttt{Arion}
 \end{itemize}
 
-We can split them into two categories: in the \textit{first category} we found those that have been designed for maintaining the \textbf{degree of polynomials} as \textbf{low} as possible, while having a high number of rounds to achieve a minimum level of bits security, which are \texttt{Poseidon}, \texttt{GMiMC}, \texttt{Rescue} and \texttt{Rescue-Prime}, while in the \textit{second} one has been used the opposite strategy, i.e. achieving efficiency maintaining a \textbf{low number of rounds}, but increasing exponentially the polynomial degree with the introduction of multiplicative inverses, and these primitives are \texttt{Griffin}, \texttt{Anemoi} and \texttt{Arion}.
+We can split them into two categories: in the \textit{first category} we found those that have been designed for maintaining the \textbf{degree of polynomials} as \textbf{low} as possible, while having a high number of rounds to achieve a minimum level of bits security, which are \texttt{GMiMC}, \texttt{Poseidon}, \texttt{Rescue} and \texttt{Rescue-Prime}, while in the \textit{second} one has been used the opposite strategy, i.e. achieving efficiency maintaining a \textbf{low number of rounds}, but increasing exponentially the polynomial degree with the introduction of multiplicative inverses, and these primitives are \texttt{Griffin}, \texttt{Anemoi} and \texttt{Arion}.
+
+\subsection{GMiMC}\label{subsec:gmimc}
 
 \subsection{Poseidon}\label{subsec:poseidon}
 
-\subsection{GMiMC}\label{subsec:gmimc}
+Poseidon is a \textbf{sponge function} based on the hashing designed strategy called \texttt{HADES}, a round function composed of both \textit{full} and \textit{partial} rounds.
+The decision to opt to this division is to lighten the computational cost of \texttt{HADES}, allowing it to maintain a minimum level of performance even with a high number of rounds. The only difference between a partial and a full round is just that the S-Box\footnote{Substitution Box} is applied only to \textbf{one} element of the state, while on the other hand is applied to each element of the state.
+
+\begin{note}
+It is important to notice that \texttt{HADES} can be adjusted to use only full rounds and achieving in this way a greater level of security.
+However, the opposite, i.e. using only partial rounds, is strongly discouraged because to achieve a minimum level of security a minimal amount of full rounds are still required, where the exact value depends on the size of the state.
+\end{note}
+
+A single round is composed of the following concatenation of functions:
+\begin{itemize}
+  \item \textit{AddRoundConstant}: a constant that depends on the round is added to each value of state;
+  \item \textit{S-Box}: the input is exponentiated to an exponent $\alpha$ where $\alpha \ge 3$ and also $\alpha$ is co-prime with $p-1$. This function is applied singularly to each/one element of the state, depending on the type of round;
+  \item \textit{MixLayer}: matrix-vector multiplication between a fixed matrix and the state, where the matrix is a square MDS\footnote{Maximum Distance Separable} matrix chosen such that no subspace trail with inactive/active S-Boxes can be set up for more than $t-1$ rounds, with $t$ the size of the state.
+\end{itemize}
+
+\begin{figure}
+  \begin{center}
+    \begin{subfigure}{0.45\textwidth}
+      % \includegraphics[width\textwidth]{figures/poseidon_round.png}
+      \missingfigure{Poseidon round}
+      \caption{Schema of a single \texttt{HADES} round}\label{fig:poseidonround}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}{0.45\textwidth}
+      \missingfigure{Poseidon round}
+      % \includegraphics[width\textwidth]{figures/poseidon_structure.png}
+      \caption{Schema of the complete \texttt{HADES} function}\label{fig:poseidonstructure}
+    \end{subfigure}
+  \end{center}
+\end{figure}
+
+In our case, because working over the BLS12-381 curve, some real and common instantiations of Poseidon are shown in Table~\ref{tab:poseidoninstances}.
+\begin{table}
+  \begin{center}
+    \begin{tabular}{|l|c|c|}
+      \hline
+      \textbf{state width} & 3 & 5 \\
+      \hline
+      \textbf{full rounds} & 8 & 8 \\
+      \hline
+      \textbf{partial rounds} & 57 & 60 \\
+      \hline
+    \end{tabular}
+  \end{center}
+  \caption{Posedon instances}\label{tab:poseidoninstances}
+\end{table}
 
 \subsection{Rescue}\label{subsec:rescue}
 
@@ -60,6 +108,8 @@ Plonk and plonk arithmetic
 \section{Implementation}\label{sec:implementation}
 
 All the primitives mentioned above have been implemented completely in Rust language
+
+\subsection{Execution}\label{subsec:execution}
 
 \subsection{Dusk-Plonk}\label{subsec:duskplonk}
 
