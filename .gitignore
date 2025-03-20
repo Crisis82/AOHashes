@@ -29,3 +29,9 @@ Cargo.lock
 **/*.out.ps
 **/*.synctex.gz
 **/*.toc
+
+# Bibtex
+**/*.bbl
+**/*.bcf
+**/*.blg
+**/*.run.xml
