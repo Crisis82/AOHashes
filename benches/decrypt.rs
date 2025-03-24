@@ -135,7 +135,7 @@ fn bench_decryption(c: &mut Criterion) {
 criterion_group! {
     name = benches;
     config = Criterion::default().sample_size(10);
-    // config = Criterion::default().sample_size(100).measurement_time(Duration::from_secs(100));
+    // config = Criterion::default().sample_size(1000).measurement_time(Duration::from_secs(800));
     targets = bench_decryption
 }
 criterion_main!(benches);

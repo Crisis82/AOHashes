@@ -7,7 +7,7 @@ use rand::SeedableRng;
 use rand::rngs::StdRng;
 
 // for gmimg and poseidon 12 is needed
-const CAPACITY: usize = 11;
+const CAPACITY: usize = 12;
 
 #[allow(dead_code)]
 #[derive(Default)]
@@ -82,8 +82,7 @@ fn bench_sponge(c: &mut Criterion) {
 criterion_group! {
     name = benches;
     // config = Criterion::default().sample_size(10);
-    // usually 100s are fine, maybe gmimc needs 2000s
-    config = Criterion::default().sample_size(100).measurement_time(Duration::from_secs(140));
+    config = Criterion::default().sample_size(1000).measurement_time(Duration::from_secs(1000));
     targets = bench_sponge
 }
 criterion_main!(benches);
