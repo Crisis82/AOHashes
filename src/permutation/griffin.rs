@@ -4,7 +4,7 @@ use lazy_static::lazy_static;
 
 /// State width t, which can be
 /// 3, 4, 8, 12, 16, 20, 24.
-pub const WIDTH: usize = 8;
+pub const WIDTH: usize = 4;
 
 /// Exponent D, which can be 5 or 7.
 pub(crate) const D: [u64; 4] = [5, 0, 0, 0];

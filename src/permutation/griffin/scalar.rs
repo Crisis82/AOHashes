@@ -30,27 +30,31 @@ impl Safe<BlsScalar, WIDTH> for ScalarPermutation {
 
 impl GriffinPi<BlsScalar> for ScalarPermutation {
     fn non_linear_layer(&mut self, state: &mut [BlsScalar]) {
+        let mut result = [BlsScalar::zero(); WIDTH];
+
         for i in 0..WIDTH {
             if i == 0 {
-                state[i] = state[i].pow_vartime(&*D_INV);
+                result[i] = state[i].pow_vartime(&*D_INV);
             } else if i == 1 {
-                state[i] = state[i].pow_vartime(&D);
+                result[i] = state[i].pow_vartime(&D);
             } else {
                 let l = if i == 2 {
                     // gamma_i = i -1 = 2 -1 = 1
                     // l_2 = gamma_i * z_0 + z_1 + 0 = z_0 + z_1
-                    state[0] + state[1]
+                    result[0] + result[1]
                 } else {
                     // gamma_i = i -1
-                    // l_i = gamma_i * z_0 + z_1 + z_(i-1)
-                    BlsScalar::from((i - 1) as u64) * state[0]
-                        + state[1]
+                    // l_i = gamma_i * z_0 + z_1 + state_(i-1)
+                    BlsScalar::from((i - 1) as u64) * result[0]
+                        + result[1]
                         + state[i - 1]
                 };
-                // state_i = state_i * (l^2 + alpha_i * l + beta_i)
-                state[i] = state[i] * (l.square() + ALPHA[i] * l + BETA[i]);
+                // z_i = state_i * (l^2 + alpha_i * l + beta_i)
+                result[i] = state[i] * (l.square() + ALPHA[i] * l + BETA[i]);
             }
         }
+
+        state.copy_from_slice(&result);
     }
 
     fn linear_layer(&mut self, state: &mut [BlsScalar], _round: usize) {

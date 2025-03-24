@@ -95,7 +95,7 @@ impl<'a> GriffinPi<Witness> for GadgetPermutation<'a> {
                 self.composer.gate_add(constraint)
             } else {
                 // gamma_i = i -1
-                // l_i = gamma_i * z_0 + z_1 + z_(i-1)
+                // l_i = gamma_i * z_0 + z_1 + state_(i-1)
                 let constraint = Constraint::new()
                     .left(BlsScalar::from((i - 1) as u64))
                     .a(result[0])
@@ -106,7 +106,7 @@ impl<'a> GriffinPi<Witness> for GadgetPermutation<'a> {
                 self.composer.gate_add(constraint)
             };
 
-            // state_i = state_i * (l^2 + alpha_i * l + beta_i)
+            // z_i = state_i * (l^2 + alpha_i * l + beta_i)
             let constraint = Constraint::new()
                 .mult(1)
                 .a(l)
