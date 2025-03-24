@@ -26,6 +26,7 @@ Cargo.lock
 **/*.fdb_latexmk
 **/*.fls
 **/*.log
+**/*.out
 **/*.out.ps
 **/*.synctex.gz
 **/*.toc
