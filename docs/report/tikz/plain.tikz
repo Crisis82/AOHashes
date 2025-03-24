@@ -1,0 +1,78 @@
+\begin{tikzpicture}
+  \begin{axis}[
+      xlabel={state width $t$},
+      ylabel={plain perfomance time [$\mu s$]},
+      ymajorgrids=true,
+      grid style=dashed,
+      width=10cm, height=14cm,
+      xmin=2, xmax=9,
+      ymin=10, ymax=1800,
+      xtick={3,4,5,6,8}, ytick={30,100,200, 300, 500, 600, 900, 1200, 1600},
+      legend pos=outer north east, legend cell align=left,
+      smooth,
+    ]
+
+    % Anemoi
+    \addplot[mark=x, color=red] plot coordinates {
+        (4,663)
+        (6,428)
+        (8,573)
+    };
+    \addlegendentry{\texttt{Anemoi}}
+    
+    % Arion
+    \addplot[mark=x, color=orange] plot coordinates {
+        (3,530)
+        (4,606)
+        (5,385)
+        (6,467)
+        (8,508)
+    };
+    \addlegendentry{\texttt{Arion}}
+    
+    % GMiMC
+    \addplot[mark=x, color=green] plot coordinates {
+        (3,43)
+        (4,45)
+        (5,24)
+        (6,26)
+        (8,30)
+    };
+    \addlegendentry{\texttt{GMiMC}}
+    
+    \addplot[mark=x, color=brown] plot coordinates {
+        (3,549)
+        (4,440)
+        (8,198)
+    };
+    \addlegendentry{\textsc{Griffin}}
+    
+    \addplot[mark=x, color=blue] plot coordinates {
+        (3,46)
+        (4,77)
+        (5,56)
+        (6,78)
+        (8,133)
+    };
+    \addlegendentry{\textsc{Poseidon}}
+    
+    \addplot[mark=x, color=cyan] plot coordinates {
+        (3,1641)
+        (4,1715)
+        (5,879)
+        (6,943)
+        (8,1264)
+    };
+    \addlegendentry{\texttt{Rescue}}
+    
+    \addplot[mark=x, color=cyan] plot coordinates {
+        (3,1631)
+        (4,1719)
+        (5,878)
+        (6,940)
+        (8,1261)
+    };
+    \addlegendentry{\texttt{Rescue-Prime}}
+
+  \end{axis}
+\end{tikzpicture}
