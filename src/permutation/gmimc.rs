@@ -3,7 +3,7 @@ use lazy_static::lazy_static;
 
 /// State width t, where t >=3 and
 /// usually is equal to 3, 4, 5, 6 or 8.
-pub const WIDTH: usize = 3;
+pub const WIDTH: usize = 8;
 
 /// Number of rounds, depending on the width.
 pub(crate) const ROUNDS: usize = {
@@ -35,7 +35,7 @@ pub(crate) mod scalar;
 
 /// Defines the GMiMC permutation algorithm.
 pub(crate) trait Gmimc<T> {
-    /// Computes `f(x) => (x + c)^3`.
+    /// Computes `f(x) => (x + c)^d`.
     fn f(&mut self, round: usize, value: &mut T);
 
     /// Expanding Round Function.

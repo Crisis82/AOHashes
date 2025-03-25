@@ -94,63 +94,122 @@ impl<'a> AnemoiHash<Witness> for GadgetPermutation<'a> {
         }
     }
 
-    fn sbox_layer(&mut self, state: &mut [Witness]) {
+    fn sbox(&mut self, state: &mut [Witness]) {
+        // Q_gamma(x) = g * x^2 - g_inv
+        // Q_delta(x) = g * x^2
+        // E(x) = x^a
+        // E^-1(x) = x^(1/a)
         for i in 0..L {
-            // x_i = x_i - g * y_i^2 - g_inv
+            // v = y - E^-1 (x - Q_gamma(y))
+            let x = self.composer[state[i]];
+            let y = self.composer[state[i + L]];
+            let y2 = y.square();
+            let v = y - (x - G * y2 + G).pow_vartime(&ALPHA_INV);
+            let witness_v = self.composer.append_witness(v);
+
+            // y-v
             let constraint = Constraint::new()
-                .mult(-G)
+                .left(1)
                 .a(state[i + L])
-                .b(state[i + L])
-                .fourth(1)
-                .d(state[i])
-                .constant(-(*G_INV));
-            state[i] = self.composer.gate_add(constraint);
-
-            // x_i^alpha_inv
-            let scalar_x = self.composer[state[i]];
-            let scalar_y = scalar_x.pow_vartime(&ALPHA_INV);
-            let witness_y = self.composer.append_witness(scalar_y);
-
-            // value^2
-            let constraint =
-                Constraint::new().mult(1).a(witness_y).b(witness_y);
+                .right(-BlsScalar::from(1))
+                .b(witness_v);
+            let yv = self.composer.gate_mul(constraint);
+            // yv^2
+            let constraint = Constraint::new().mult(1).a(yv).b(yv);
             let power2 = self.composer.gate_mul(constraint);
-            // value^4
+            // yv^4
             let constraint = Constraint::new().mult(1).a(power2).b(power2);
             let power4 = self.composer.gate_mul(constraint);
-
             let power = if ALPHA[0] == 7 {
-                // value^6
+                // yv^6
                 let constraint = Constraint::new().mult(1).a(power4).b(power2);
                 self.composer.gate_mul(constraint)
             } else {
                 power4
             };
+            // yv^5 or yv^7
+            let constraint = Constraint::new().mult(1).a(power).b(yv);
+            // E(y-v)
+            let e = self.composer.gate_add(constraint);
 
-            // value^5 or value^7
-            let constraint = Constraint::new().mult(1).a(power).b(witness_y);
-            state[i] = self.composer.gate_mul(constraint);
-
-            // y_i = y_i - x_i^alpha_inv
-            let constraint = Constraint::new()
-                .left(1)
-                .a(state[i + L])
-                .right(-BlsScalar::from(1))
-                .b(state[i]);
-            state[i + L] = self.composer.gate_add(constraint);
-
-            state[i] = witness_y;
-
-            // x_i = x_i + g * y_i^2
+            // x = Q_gamma(y) + E(y-v)
             let constraint = Constraint::new()
                 .mult(G)
-                .a(state[i + L])
-                .b(state[i + L])
+                .a(state[i + L]) // y
+                .b(state[i + L]) // y
                 .fourth(1)
-                .d(state[i]);
+                .d(e)
+                .constant(G_INV.neg());
             state[i] = self.composer.gate_add(constraint);
+
+            // u = Q_delta(v) + E(y-v)
+            let constraint = Constraint::new()
+                .mult(G)
+                .a(witness_v)
+                .b(witness_v)
+                .fourth(1)
+                .d(e);
+            state[i + L] = self.composer.gate_add(constraint);
         }
     }
+
+    // fn sbox(&mut self, state: &mut [Witness]) {
+    //     for i in 0..L {
+    //         // x_i = x_i - g * y_i^2 - g_inv
+    //         let constraint = Constraint::new()
+    //             .mult(-G)
+    //             .a(state[i + L])
+    //             .b(state[i + L])
+    //             .fourth(1)
+    //             .d(state[i])
+    //             .constant(-(*G_INV));
+    //         state[i] = self.composer.gate_add(constraint);
+
+    //         // x_i^alpha_inv
+    //         let scalar_x = self.composer[state[i]];
+    //         let scalar_y = scalar_x.pow_vartime(&ALPHA_INV);
+    //         let witness_y = self.composer.append_witness(scalar_y);
+
+    //         // value^2
+    //         let constraint =
+    //             Constraint::new().mult(1).a(witness_y).b(witness_y);
+    //         let power2 = self.composer.gate_mul(constraint);
+    //         // value^4
+    //         let constraint = Constraint::new().mult(1).a(power2).b(power2);
+    //         let power4 = self.composer.gate_mul(constraint);
+
+    //         let power = if ALPHA[0] == 7 {
+    //             // value^6
+    //             let constraint =
+    // Constraint::new().mult(1).a(power4).b(power2);
+    // self.composer.gate_mul(constraint)         } else {
+    //             power4
+    //         };
+
+    //         // value^5 or value^7
+    //         let constraint = Constraint::new().mult(1).a(power).b(witness_y);
+    //         state[i] = self.composer.gate_mul(constraint);
+
+    //         // y_i = y_i - x_i^alpha_inv
+    //         let constraint = Constraint::new()
+    //             .left(1)
+    //             .a(state[i + L])
+    //             .right(-BlsScalar::from(1))
+    //             .b(state[i]);
+    //         state[i + L] = self.composer.gate_add(constraint);
+
+    //         state[i] = witness_y;
+
+    //         // x_i = x_i + g * y_i^2
+    //         let constraint = Constraint::new()
+    //             .mult(G)
+    //             .a(state[i + L])
+    //             .b(state[i + L])
+    //             .fourth(1)
+    //             .d(state[i]);
+    //         state[i] = self.composer.gate_add(constraint);
+    //     }
+    // }
 }
 
 #[cfg(feature = "encryption")]

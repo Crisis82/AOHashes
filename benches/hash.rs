@@ -6,8 +6,8 @@ use ff::Field;
 use rand::SeedableRng;
 use rand::rngs::StdRng;
 
-// for gmimg and poseidon 12 is needed
-const CAPACITY: usize = 12;
+// for gmimg and poseidon at least 12 if not more is needed
+const CAPACITY: usize = 11;
 
 #[allow(dead_code)]
 #[derive(Default)]

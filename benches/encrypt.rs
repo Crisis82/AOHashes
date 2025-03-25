@@ -10,13 +10,8 @@ use once_cell::sync::Lazy;
 use rand::SeedableRng;
 use rand::rngs::StdRng;
 
-cfg_if::cfg_if! {
-    if #[cfg(any(feature = "anemoi", feature = "arion", feature = "griffin", feature = "poseidon", feature = "rescue", feature = "rescue_prime"))] {
-        const CAPACITY: usize = 11;
-    } else if #[cfg(feature = "gmimc")] {
-        const CAPACITY: usize = 16;
-    }
-}
+// for gmimg and poseidon at least 12 if not more is needed
+const CAPACITY: usize = 11;
 
 const MESSAGE_LEN: usize = 2;
 

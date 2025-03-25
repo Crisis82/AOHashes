@@ -100,7 +100,7 @@ pub(crate) trait AnemoiHash<T> {
     fn pht(&mut self, state: &mut [T]);
 
     /// Open Flystel function H.
-    fn sbox_layer(&mut self, state: &mut [T]);
+    fn sbox(&mut self, state: &mut [T]);
 
     /// Applies a round.
     ///
@@ -110,13 +110,13 @@ pub(crate) trait AnemoiHash<T> {
     /// - Linear layer: matrix-vector multiplication between MATRIX_X and state
     ///   X, and between MATRIX_Y and state Y;
     /// - PHT: Pseudo-Hadamard Transformation P;
-    /// - S-Box layer: application of the open Flystel function H with
-    ///   parameters alpha, beta, gamma and delta.
+    /// - S-Box: application of the Flystel function with parameters alpha,
+    ///   beta, gamma and delta.
     fn apply_round(&mut self, round: usize, state: &mut [T]) {
         self.constant_addition(state, round);
         self.linear_layer(state);
         self.pht(state);
-        self.sbox_layer(state);
+        self.sbox(state);
     }
 
     /// Applies one permutation.
