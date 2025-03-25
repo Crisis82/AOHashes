@@ -28,15 +28,15 @@ In recent years, the field of cryptography has seen a surge of interest in Zero-
 
 Among the various types of ZK proofs, a special category known as non-interactive proofs has gained popularity. Unlike interactive ZK proofs, non-interactive proofs do not require back-and-forth communication between the prover and verifier, making them ideal for decentralized environments like blockchains.
 
-This paper focuses on a specific type of non-interactive ZK proof system called \textsf{Plonk}, which belongs to the SNARK (Succinct Non-interactive ARguments of Knowledge) family. \textsf{Plonk} proofs are based on advanced mathematical structures known as arithmetic circuits, which are translated into constraints and then evaluated as polynomials. This structure makes the proof generation process more efficient while keeping computational complexity low.
+This paper focuses on a specific type of non-interactive ZK proof system called \textsf{Plonk}~\cite{plonk}, which belongs to the SNARK (Succinct Non-interactive ARguments of Knowledge) family. \textsf{Plonk} proofs are based on advanced mathematical structures known as arithmetic circuits, which are translated into constraints and then evaluated as polynomials. This structure makes the proof generation process more efficient while keeping computational complexity low.
 
 However, one challenge with this approach is that many traditional cryptographic primitives are not well-suited to work efficiently within \textsf{Plonk}'s constraint-based framework. To address this, researchers have developed a new class of cryptographic primitives designed specifically for this purpose, known as Arithmetization-Oriented (AO) primitives. These AO primitives aim to maximize the performance of ZK proofs by minimizing the computational overhead associated with constraints, particularly when performing basic operations like addition and multiplication.
 
-In this paper, we explore and evaluate several of the latest AO primitives that have been implemented in the Rust programming language and tested using the Dusk Network's \textsf{Plonk} ZK library. Our goal is to compare these primitives based on their performance, efficiency, and suitability for different use cases. By highlighting their strengths and weaknesses, we aim to provide valuable insights for developers and researchers interested in optimizing ZK-proof systems and designing new cryptographic solutions.
+In this paper, we explore and evaluate several of the latest AO primitives that have been implemented in the Rust programming language and tested using the Dusk Network's \textsf{Plonk} ZK library~\cite{dusk-plonk}. Our goal is to compare these primitives based on their performance, efficiency, and suitability for different use cases. By highlighting their strengths and weaknesses, we aim to provide valuable insights for developers and researchers interested in optimizing ZK-proof systems and designing new cryptographic solutions.
 
 \chapter{Overview}\label{chap:overview}
 
-As mentioned in the introductory chapter (\ref{chap:intro}), the primitives that have been tested in this project are arithmetization oriented and this is because for zero-knowledge proof, evaluation is important, but verification is even more critical, and this design provides an efficient solution for performing both operations.
+As mentioned in the introductory chapter (\ref{chap:intro}), the primitives that have been tested in this project are arithmetization oriented and this is because for zero-knowledge proof, plain evaluation is important, but proof genereation and verification is even more critical, and this design provides an efficient solution for performing both operations.
 Another important aspect of AO primitives is that they are suitable for a vast number of field sizes and security levels, making them very elastic and adaptable to different scenarios and applications.
 However, as we will evidence from this paper's results, the design of these primitives can severely affect the computational time of generating and verifying proofs even though the same environment is provided and the same instances are used.
 
@@ -48,16 +48,16 @@ For this reason we have chosen to work on only one curve, which is the BLS12-381
 
 The primitives that have been implemented and tested in this project are:
 \begin{itemize}
-  \item \texttt{GMiMC}\cite{gmimc}
-  \item \textsc{Poseidon}\cite{poseidon}
-  \item \texttt{Rescue}\cite{rescue}
-  \item \texttt{Rescue-Prime}\cite{rescue-prime}
-  \item \textsc{Griffin}\cite{griffin}
-  \item \texttt{Anemoi}\cite{anemoi}
-  \item \texttt{Arion}\cite{arion}
+  \item \texttt{GMiMC}~\cite{gmimc}
+  \item \textsc{Poseidon}~\cite{poseidon}
+  \item \texttt{Rescue}~\cite{rescue}
+  \item \texttt{Rescue-Prime}~\cite{rescue-prime}
+  \item \textsc{Griffin}~\cite{griffin}
+  \item \texttt{Anemoi}~\cite{anemoi}
+  \item \texttt{Arion}~\cite{arion}
 \end{itemize}
 
-We can split them into two categories: in the \textit{first category} we found those that have been designed for maintaining the \textbf{degree of polynomials} as \textbf{low} as possible, while having a high number of rounds to achieve a minimum level of bits security, which are \texttt{GMiMC}, \textsc{Poseidon}, \texttt{Rescue} and \texttt{Rescue-Prime}, while in the \textit{second} one has been used the opposite strategy, \textsl{i.e.} achieving efficiency maintaining a \textbf{low number of rounds}, but increasing exponentially the polynomial degree with the introduction of multiplicative inverses, and these primitives are \textsc{Griffin}, \texttt{Anemoi} and \texttt{Arion}.
+We can split them into two categories: in the \textit{first category} we found those that have been designed for maintaining the \textbf{degree of polynomials} as \textbf{low} as possible, while having a high number of rounds to achieve a minimum level of bits security, which are \texttt{GMiMC}, \textsc{Poseidon}, \texttt{Rescue} and \texttt{Rescue-Prime}, while in the \textit{second} one has been used the opposite strategy, \textsl{i.e.} achieving efficiency maintaining a \textbf{low number of rounds}, but increasing exponentially the polynomial degree with the introduction of inverse power permutations, and these primitives are \textsc{Griffin}, \texttt{Anemoi} and \texttt{Arion}.
 
 \subsection{\texttt{GMiMC}}\label{subsec:gmimc}
 
@@ -72,14 +72,20 @@ The first function implemented in this project has been \texttt{GMiMC}\footnote{
 
 As it is possible to deduct from the above schema, a single $\texttt{GMiMC}_\texttt{erf}$ round is composed of the following operations:
 \begin{itemize}
-  \item Computation of $y = F(x_0): x_0 \rightarrow x_o^3$, where $x_0$ is the first element of the state;
+  \item Computation of $y = F(x_0): x_0 \rightarrow x_0^3$, where $x_0$ is the first element of the state;
   \item XOR addition between each element of the state except the first one, and the output $y$ of $F$;
   \item Left-rotation of the state by one position.
 \end{itemize}
 
-Some common instatiations of \texttt{GMiMC} to achieve the minimum security of 128 bits over the curve BLS12-381 are shown in table~\ref{tab:gmimcinstances}:
+Some common instatiations of \texttt{GMiMC} to achieve the minimum security of 128 bits over the curve BLS12-381 are shown in table~\ref{tab:gmimcinstances} where the formula used to compute the number of rounds $n$ is:
+\begin{equation}
+  n = \max \left\{ 2 + 2 \cdot (t + t^2), \lceil 2 \cdot \log_d(p) \rceil + 2t \right\},
+  \label{eq:gmimcrounds}
+\end{equation}
+where $t$ is the state width, $d$ is the exponent of the mapping function $F$ (\textsl{i.e.} 3) and $p$ is the prime used for our curve.
 
 \begin{table}[H]
+  \caption{\texttt{GMiMC} instances for $d = 5$.}\label{tab:gmimcinstances}
   \begin{center}
     \begin{tabular}{|l|c|c|c|c|c|}
       \hline
@@ -89,15 +95,7 @@ Some common instatiations of \texttt{GMiMC} to achieve the minimum security of 1
       \hline
     \end{tabular}
   \end{center}
-  \caption{\texttt{GMiMC} instances.}\label{tab:gmimcinstances}
 \end{table}
-where the formula used to compute the number of rounds $n$ is:
-\begin{equation}
-  n = \max \left\{ 2 + 2 \cdot (t + t^2), \lceil 2 \cdot \log_d(p) \rceil + 2t \right\}
-  \label{eq:gmimcrounds}
-\end{equation}
-with $t$ the state width, $d$ the exponent of the mapping function $F$ (\textsl{i.e.} 3) and $p$ the prime used for our curve.
-
 \subsection{\textsc{Poseidon}}\label{subsec:poseidon}
 
 \textsc{Poseidon} is a \textbf{sponge function} based on the hashing designed strategy called \textsc{Hades}, a permutation round function composed of both \textit{full} and \textit{partial} rounds.
@@ -146,6 +144,7 @@ The followings (figure~\ref{fig:poseidon}) are the visual representations of the
 
 Some commonly used instantiations of \textsc{Poseidon} are shown here in Table~\ref{tab:poseidoninstances}:
 \begin{table}[H]
+  \caption{\textsc{Poseidon} instances for $d=5$.}\label{tab:poseidoninstances}
   \begin{center}
     \begin{tabular}{|l|c|c|}
       \hline
@@ -157,13 +156,12 @@ Some commonly used instantiations of \textsc{Poseidon} are shown here in Table~\
       \hline
     \end{tabular}
   \end{center}
-  \caption{\textsc{Poseidon} instances.}\label{tab:poseidoninstances}
 \end{table}
 
 \subsection{\texttt{Rescue}}\label{subsec:rescue}
 
-The \texttt{Rescue} primitive is a sponge function based on the \texttt{Marvellous} design strategy and the focus of the authors of this primitive was on the realization of a secure and robust function, rather than an efficient one, while keeping a simple structure.
-For this reason is born the \texttt{Marvellous} strategy which is a SPN\footnote{Substitution-Permutation Network} round function, where each round is split into two phases and each phase is the composition of the different operations.
+The \texttt{Rescue} primitive is a sponge function based on the \texttt{Marvellous} design strategy and the focus of the authors of this primitive was realizing a secure and robust function, rather than an efficient one, while keeping a simple structure.
+For this purpose, they proposed the \texttt{Marvellous} strategy which is a SPN\footnote{Substitution-Permutation Network} round function, where each round is split into two phases and each phase is the composition of the different operations.
 
 A single round is organized as follows:
 \begin{itemize}
@@ -191,6 +189,7 @@ The round function is summarized in figure~\ref{fig:rescue}:
 
 The most common instantiations of \texttt{Rescue} are shown in table~\ref{tab:rescueinstances}:
 \begin{table}[H]
+  \caption{\texttt{Rescue} instances for $d = 5$.}\label{tab:rescueinstances}
   \begin{center}
     \begin{tabular}{|l|c|c|c|c|}
       \hline
@@ -200,7 +199,6 @@ The most common instantiations of \texttt{Rescue} are shown in table~\ref{tab:re
       \hline
     \end{tabular}
   \end{center}
-  \caption{\texttt{Rescue} instances for $d = 5$.}\label{tab:rescueinstances}
 \end{table}
 
 \subsection{\texttt{Rescue-Prime}}\label{subsec:rescueprime}
@@ -209,13 +207,13 @@ The hash function \texttt{Rescue-Prime} has the same general underlying structur
 \begin{itemize}
   \item Simplification of the round constants' derivation function;
   \item Reduction of the security margin to its half (\textsl{i.e.} from $100\%$ to $50\%$);
-  \item Flipping in the order of the S-Boxes.
+  \item Flipping the order of the S-Boxes.
 \end{itemize}
 
 The authors decided to not override the previous \texttt{Rescue} hash function, but to deploy these changes in a new version and to do so it has been decided to give it a new name to maintain a clear distinction between the two versions.
 In fact, even the inner permutation function changed name to \texttt{Rescue-XLIX}\footnote{Rescue Forty-nine}.
 
-The round function described for \texttt{Rescue} is still valid for \texttt{Rescue-Prime}, but with the changes mentioned above, \textsl{i.e.} inversion of the S-Boxes order.
+The round function described for \texttt{Rescue} is still valid for \texttt{Rescue-Prime}, but with the changes mentioned above, \textsl{i.e.} swap f the S-Boxes order.
 
 Because the general structure is the same, also the number of rounds and state width are the same shown in table~\ref{tab:rescueinstances}.
 
@@ -250,7 +248,7 @@ A single round of the permutation function \textsc{Griffin-$\pi$} is organized a
     \label{eq:griffinli}
   \end{equation}
   and $\alpha_i$,$\beta_i$ are constants generated \textsl{s.t.} $\alpha_i^2 - 4 \cdot \beta_i$ is a quadratic non-residue modulo $p$;
-  \item \textit{MixLayer}: matrix-vector multiplication between an MDS fixed matrix and the state;
+  \item \textit{MixLayer}: matrix-vector multiplication between an MDS matrix and the state;
   \item \textit{AddRoundConstant}: a round constant that is equal for each element of the state, is added to the state.
 \end{itemize}
 
@@ -266,8 +264,16 @@ Before computing the \textsc{Griffin-$\pi$} permutation function on the needed r
 
 Furthermore, the permutation \textsc{Griffin-$\pi$} can be used with \textsc{Griffin} in sponge as well as in a compression mode, interchangeably. 
 
-In the table~\ref{tab:griffininstances} are provided the most common instantiations of \textsc{Griffin}:
+In the table~\ref{tab:griffininstances} are provided the most common instantiations of \textsc{Griffin}, where the minimum number of rounds $n$ is computed with the following formula:
+\begin{equation}
+  n \ge \left\lceil 1.2 \cdot \max \left\{6, \left\lceil \frac{2.5 \cdot \kappa}{\log_2(p) - \log_2(d-1)} \right\rceil, 1 + n_{GB} \right\} \right\rceil,
+  \label{eq:griffinrounds}
+\end{equation}
+
+where $\kappa$ is the bits security level (in our case 128), $p$ is the prime used for the curve, $d$ is the exponent of the S-Box and $n_{GB}$ is the number of rounds needed to defend against Gr\"obner basis attacks.
+
 \begin{table}[H]
+  \caption{\textsc{Griffin} instances for $d = 5$.}\label{tab:griffininstances}
   \begin{center}
     \begin{tabular}{|l|c|c|c|}
       \hline
@@ -277,18 +283,11 @@ In the table~\ref{tab:griffininstances} are provided the most common instantiati
       \hline
     \end{tabular}
   \end{center}
-  \caption{\textsc{Griffin} instances for $d = 5$.}\label{tab:griffininstances}
 \end{table}
-where the minimum number of rounds $n$ is computed with the following formula:
-\begin{equation}
-  n \ge \left\lceil 1.2 \cdot \max \left\{6, \left\lceil \frac{2.5 \cdot \kappa}{\log_2(p) - \log_2(d-1)} \right\rceil, 1 + n_{GB} \right\} \right\rceil
-  \label{eq:griffinrounds}
-\end{equation}
-with $\kappa$ the bits security level (in our case 128), $p$ the prime used for the curve, $d$ the exponent of the S-Box and $n_{GB}$ the number of rounds needed to defend against Gr\"obner basis attacks.
 
 \subsection{\texttt{Anemoi}}\label{subsec:anemoi}
 
-To improve the efficiency in terms of \textbf{evaluation} and \textbf{verification} of zero-knowledge proof's circuits, it has been proposed this new primitive based on \textbf{CCZ-equivalence} called \texttt{Anemoi}. It is a sponge function which inner permutation doesn't implement the usual S-Box structure, but instead a new design called \texttt{Flystel} which allows both a high degree evaluation and a low degree verification.
+To improve the efficiency in terms of \textbf{evaluation} and \textbf{verification} of zero-knowledge proof circuits, it has been proposed this new primitive based on \textbf{CCZ-equivalence} called \texttt{Anemoi}. It is a sponge function whose inner permutation doesn't implement the usual S-Box structure, but instead a new design called \texttt{Flystel} which allows both a high degree evaluation and a low degree verification.
 There are two types of \texttt{Flystel} gates, which are the open and the closed one and because are CCZ-equivalent, for this project it has been decided to implement only the open one with the documentation's proposed parameters to work in odd prime characteristic (figure~\ref{fig:flystel}), due to our prime $p$ choice.
 
 \begin{figure}[H]
@@ -322,9 +321,16 @@ and the visual representation is the following (figure~\ref{fig:anemoi}):
 
 The \texttt{Anemoi} permutation function works by iterating the round function for the needed number of rounds and finally compute an additional \textit{MixLayer} on the state.
 
-The most common instantiations of this primitive are shown in the following table~\ref{tab:aneomiinstances}:
+The most common instantiations of this primitive are shown in the following table~\ref{tab:aneomiinstances} and the number of rounds $n$ is computed with the following formula:
+
+\begin{equation}
+  n \ge \max \left\{ 8, \underbrace{\min \left\{ 5, l+1 \right\}}_{\text{security margin}} + \underbrace{\min \left\{ r \in \mathbb{N} | \mathcal{C}_{alg(r)} \ge 2 \right\} + 2}_{\text{security for algebraic attacks}} \right\}
+  \label{eq:anemoirounds},
+\end{equation}
+where $l = \frac{t}{2}$ is the width of the halves and $t$ the total size of the state.
 
 \begin{table}[H]
+  \caption{\texttt{Anemoi} instances for $d = 5$.}\label{tab:aneomiinstances}
   \begin{center}
     \begin{tabular}{|l|c|c|c|}
       \hline
@@ -334,19 +340,11 @@ The most common instantiations of this primitive are shown in the following tabl
       \hline
     \end{tabular}
   \end{center}
-  \caption{\texttt{Anemoi} instances for $d = 5$.}\label{tab:aneomiinstances}
 \end{table}
-and the number of rounds $n$ is computed with the following formula:
-\begin{equation}
-  n \ge \max \left\{ 8, \underbrace{\min \left\{ 5, l+1 \right\}}_{\text{security margin}} + \underbrace{\min \left\{ r \in \mathbb{N} | \mathcal{C}_{alg(r)} \ge 2 \right\} + 2}_{\text{security for algebraic attacks}} \right\}
-  \label{eq:anemoirounds}
-\end{equation}
-where $l = \frac{t}{2}$ is the width of the halves and $t$ the total size of the state.
-
 \subsection{\texttt{Arion}}\label{subsec:arion}
 
-The last primitive implemented in this project is \texttt{Arion}, from which has been built the respective hash function named \texttt{ArionHash} and although it exists also an aggressive version, called \texttt{$\alpha$-Arion}, this has not been implemented in this project.
-The permutation function inside \texttt{Arion} is different from the previous ones because is used the \textit{GTDS}\footnote{Generalized Triangular Dynamical System} structure, which is an alternative solution to the same approach used in the primitive \textsc{Griffin}, where the aim was to maintain a low multiplicative complexity and a low number of rounds, without affecting the security level.
+The last primitive implemented in this project is \texttt{Arion}, from which has been built the respective hash function named \texttt{ArionHash}.
+The permutation function inside \texttt{Arion} is different from the previous ones because is used the \textit{GTDS}\footnote{Generalized Triangular Dynamical System} structure\cite{gtds}, which is an alternative solution to the same approach used in the primitive \textsc{Griffin}, where the aim was to maintain a low multiplicative complexity and a low number of rounds, without affecting the security level.
 
 A single round through \texttt{Arion} is computed with the following operations:
 \begin{itemize}
@@ -386,7 +384,7 @@ A single round through \texttt{Arion} is computed with the following operations:
   \item \textit{MixLayer}: matrix-vector multiplication between a fixed matrix and the state;
   \item \textit{AddRoundConstant}: addition of the round constant to each element of the state.
 \end{itemize}
-where, in the \texttt{Arion} documentation\cite{arion}, the last two operations are seen as a single layer called \textit{AffineLayer}.
+note that, in the \texttt{Arion} documentation\cite{arion}, the last two operations are seen as a single layer called \textit{AffineLayer}.
 
 The visual representation of a single round is shown below (figure~\ref{fig:arion}):
 
@@ -400,6 +398,7 @@ The visual representation of a single round is shown below (figure~\ref{fig:ario
 Furthermore, a complete permutation in \texttt{Arion} is done with an initial application of the \textit{MixLayer} to the state and then the iteration of the round function for the number of rounds needed.
 The most common instantiations of \texttt{Arion} are shown in table~\ref{tab:aneomiinstances}:
 \begin{table}[H]
+  \caption{\texttt{Arion} instances for $d_1 = 5$.}\label{tab:aneomiinstances}
   \begin{center}
     \begin{tabular}{|l|c|c|c|}
       \hline
@@ -409,7 +408,6 @@ The most common instantiations of \texttt{Arion} are shown in table~\ref{tab:ane
       \hline
     \end{tabular}
   \end{center}
-  \caption{\texttt{Arion} instances for $d_1 = 5$.}\label{tab:aneomiinstances}
 \end{table}
 
 \section{Implementation}\label{sec:implementation}
@@ -430,7 +428,7 @@ For each primitive it has been decided to create two separate modes:
   \item plain hash function: this has been implemented in the files called \texttt{scalar.rs} and works with values in the BLS12-381 curve;
   \item zero-knowledge proof generation and verification: inside the \texttt{gadget.rs} files have been implemented the operations of the permutation's functions that work with the \textsf{Plonk} constraint system.
 \end{enumerate}
-plus for each function there is a file \texttt{hash\_name.rs} (\textsl{e.g.} \texttt{gmimc.rs}) that defines the permutation and a \texttt{params.rs} which dynamically generates the parameters needed, like exponents, constants or matrices, by the permutation function.
+Plus for each function there is a file \texttt{hash\_name.rs} (\textsl{e.g.} \texttt{gmimc.rs}) that defines the permutation and a \texttt{params.rs} which dynamically generates the parameters needed, like exponents, constants or matrices, by the permutation function.
 
 It has been decided for a dynamical approach for the parameters' generation for two reasons:
 \begin{enumerate}
@@ -513,6 +511,7 @@ The first test that we wanted to analyze was the raw performance of the primitiv
 In the following table~(\ref{tab:plain}) have been collected the average times of the results for this testing category, expressed in $\mu s$:
 
 \begin{table}[H]
+  \caption{Plain timing performance in $\mu s$ with $d = 5$.}\label{tab:plain}
   \begin{center}
     \begin{tabular}{|l|c|c|c|c|c|}
       \hline
@@ -528,7 +527,6 @@ In the following table~(\ref{tab:plain}) have been collected the average times o
       \hline
     \end{tabular}
   \end{center}
-  \caption{Plain timing performance in $\mu s$ with $d = 5$.}\label{tab:plain}
 \end{table}
 
 And all the above results have been plotted in the following figure~\ref{plot:plain}, to have also a visual comparison between the timings.
@@ -555,26 +553,26 @@ We analyzed also this aspect for the zero-knowledge evaluation, in order to have
 The general formulas to calculate the number of constraints for a single round of each primitive are the following:
 
 \begin{align*}
-  \texttt{Anemoi}_{c_r} & = c_{\text{AddRoundConstant}} + c_{\text{MixLayer}} + c_{\text{PHT}} + c_{\text{S-Box}} =\\
-    &= 2l + 2l^2 + 2l + 6l = 2l^2 + 10l =\\
+  \texttt{Anemoi}_{c_r} & = c_{\text{AddRoundConstant}} + c_{\text{MixLayer}} + c_{\text{PHT}} + c_{\text{S-Box}} \\
+    &= 2l + 2l^2 + 2l + 6l = 2l^2 + 10l \\
     &= \frac{t^2}{2} + 5t\\[20pt]
-  \texttt{Arion}_{c_r} &= c_{\text{GTDS}} + c_{\text{MixLayer}} + c_{\text{AddRoundConstant}} =\\
-    &= (t-1) \cdot 7 + 16 + t + t^2 =\\
+  \texttt{Arion}_{c_r} &= c_{\text{GTDS}} + c_{\text{MixLayer}} + c_{\text{AddRoundConstant}} \\
+    &= (t-1) \cdot 7 + 16 + t + t^2 \\
     &= t^2 + 8t + 9\\[20pt]
   \texttt{GMiMC}_{c_r} &= c_{\text{ERF}} = t+2\\[20pt]
-  \textsc{Griffin}_{c_r} &= c_{\text{S-Box}} + c_{\text{MixLayer}} + c_{\text{AddRoundConstant}} =\\
-    & = 6 + (t-2)*3 + t^2 + t =\\
+  \textsc{Griffin}_{c_r} &= c_{\text{S-Box}} + c_{\text{MixLayer}} + c_{\text{AddRoundConstant}} \\
+    & = 6 + (t-2)*3 + t^2 + t \\
     & = t^2 + 4t\\[20pt]
-  \textsc{Poseidon}_{c_{partial}} &= c_{\text{AddRoundConstant}} + c_{\text{S-Box}} + c_{\text{MixLayer}} =\\
+  \textsc{Poseidon}_{c_{partial}} &= c_{\text{AddRoundConstant}} + c_{\text{S-Box}} + c_{\text{MixLayer}} \\
     &= t + 3 + t^2\\[20pt]
-  \textsc{Poseidon}_{c_{full}} &= c_{\text{AddRoundConstant}} + c_{\text{S-Box}} + c_{\text{MixLayer}} =\\ 
-    &= t + 3t + t^2 =\\
+  \textsc{Poseidon}_{c_{full}} &= c_{\text{AddRoundConstant}} + c_{\text{S-Box}} + c_{\text{MixLayer}} \\ 
+    &= t + 3t + t^2 \\
     &= t^2 + 4t\\[20pt]
-  \texttt{Rescue}_{c_r} &= 2 \cdot (c_{\text{S-Box}} + c_{\text{MixLayer}} + c_{\text{AddRoundConstant}}) =\\
-    &= 2 \cdot (3t + t^2 + t) =\\
+  \texttt{Rescue}_{c_r} &= 2 \cdot (c_{\text{S-Box}} + c_{\text{MixLayer}} + c_{\text{AddRoundConstant}}) \\
+    &= 2 \cdot (3t + t^2 + t) \\
     &= 2t^2 + 8t\\[20pt]
-  \texttt{Rescue-Prime}_{c_r} &= 2 \cdot (c_{\text{S-Box}} + c_{\text{MixLayer}} + c_{\text{AddRoundConstant}}) =\\
-    &= 2 \cdot (3t + t^2 + t) =\\
+  \texttt{Rescue-Prime}_{c_r} &= 2 \cdot (c_{\text{S-Box}} + c_{\text{MixLayer}} + c_{\text{AddRoundConstant}}) \\
+    &= 2 \cdot (3t + t^2 + t) \\
     &= 2t^2 + 8t
 \end{align*}
 
@@ -583,6 +581,7 @@ We used the variable $c_r$ to denote the constraints per round.
 Additionally, because of \textsc{Poseidon}'s design, where a round can be full or partial, we decided to show the number of constraints for both, round types and that's why for each cell there are two values, presented with the following notation \{partial\}/\{full\}.
 
 \begin{table}[H]
+  \caption{Number of constraints needed for a single round of the permutation with $d = 5$.}\label{tab:constraintsround}
   \begin{center}
     \begin{tabular}{|l|c|c|c|c|c|}
       \hline
@@ -598,7 +597,6 @@ Additionally, because of \textsc{Poseidon}'s design, where a round can be full o
       \hline
     \end{tabular}
   \end{center}
-  \caption{Number of constraints needed for a single round of the permutation with $d = 5$.}\label{tab:constraintsround}
 \end{table}
 
 Now we extend the above results to an entire permutation, thus we define $c_p$ as constraints per permutation and define the general formulas:
@@ -613,6 +611,7 @@ Now we extend the above results to an entire permutation, thus we define $c_p$ a
 \end{align*}
 
 \begin{table}[H]
+  \caption{Number of constraints needed for a complete permutation with $d = 5$.}\label{tab:constraintsperm}
   \begin{center}
     \begin{tabular}{|l|c|c|c|c|c|}
       \hline
@@ -628,7 +627,6 @@ Now we extend the above results to an entire permutation, thus we define $c_p$ a
       \hline
     \end{tabular}
   \end{center}
-  \caption{Number of constraints needed for a complete permutation with $d = 5$.}\label{tab:constraintsperm}
 \end{table}
 
 Even though \texttt{Rescue} and \texttt{Rescue-Prime} were the two primitives with the highest number of constraints per round, if we consider the entire permutation, which is the most important aspect, these two are still in the top 3 for the highest number of constraints, but not as much as \texttt{GMiMC} and \textsc{Poseidon}.
@@ -640,9 +638,10 @@ On the other hand, thanks to its design that allow to keep the number of rounds 
 
 \section{Proof generation}\label{sec:proofgen}
 
-In the third tests type, we focused on the time needed to generate a zero-knowledge proof with the Plonk constraint system, which we have collected in the following table~(\ref{tab:proofgen}):
+In the third test type, we focused on the time needed to generate a zero-knowledge proof with the Plonk constraint system, which we have collected in the following table~(\ref{tab:proofgen}):
 
 \begin{table}[H]
+  \caption{Proof generation performance's time in $ms$ with $d = 5$.}\label{tab:proofgen}
   \begin{center}
     \begin{tabular}{|l|c|c|c|c|c|}
       \hline
@@ -658,7 +657,6 @@ In the third tests type, we focused on the time needed to generate a zero-knowle
       \hline
     \end{tabular}
   \end{center}
-  \caption{Proof generation performance's time in $ms$ with $d = 5$.}\label{tab:proofgen}
 \end{table}
 
 And the following figure~(\ref{plot:proofgen}) corresponds to the above data that have been plotted, to have also a visual comparison between the different primitives:
@@ -671,7 +669,7 @@ And the following figure~(\ref{plot:proofgen}) corresponds to the above data tha
 For a better understanding of the results, we decided to assign the same color to \texttt{Anemoi} and \textsc{Griffin} and also to \texttt{Rescue} and \texttt{Rescue-Prime}, because their timings are so close that their curves are overlapping.
 
 As it is possible to evince from these results, the fastest primitive for this category of tests is \texttt{Arion}, immediately followed by \texttt{Anemoi} and \textsc{Griffin}.
-Nonetheless, considering that the latest two primitives works only with 3 out 5 possible state widths, their results is almost as good as \texttt{Arion}.
+Nonetheless, considering that the latest two primitives work only with 3 out 5 possible state widths, their results is almost as good as \texttt{Arion}.
 If we have to take also in consideration the stability of the results, \texttt{Arion} is a little unstable and whose behavior is closely related to the one of the plain performance test.
 
 On the other spectrum of the tests' results, \textsc{Poseidon} is the worst primitive in terms of proof generation as expected by the high number of constraints per permutation highlighted in the previous section (\ref{sec:constraints}), almost doubling the time in the case of state width $t = 8$ respectively to average time of the other state widths' values.
@@ -691,6 +689,6 @@ On the other hand, while \texttt{GMiMC} has been one of the first primitives tha
 We hope that with this paper we have provided a good overview of the current state of the AO primitives and that with these results new optimizations may come out, or even better that this will spark new ideas for innovative design strategies that will enrich the cryptographic community.
 
 \nocite{*}
-\printbibliography[heading=bibnumbered,title={References}]
+\printbibliography[heading=bibnumbered]
 
 \end{document}
