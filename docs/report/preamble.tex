@@ -15,8 +15,8 @@
 \hypersetup{
 	colorlinks=true,
   % allcolors=fg,
-  linkcolor=fg,
-  citecolor=cyan,
+  linkcolor=darkviolet,
+  citecolor=blueb,
 	bookmarksnumbered=true,
 	bookmarksopen=true
 }
@@ -49,12 +49,26 @@
 
 \lstset{style=scripts}
 
+\makeatletter
+\renewcommand\listoffigures{%
+        \@starttoc{lof}%
+}
+\makeatother
+
+\makeatletter
+\renewcommand\listoftables{%
+        \@starttoc{lot}%
+}
+\makeatother
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % COLORS
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \definecolor{bg}{HTML}{F2F2F2}
 \definecolor{fg}{HTML}{282828}
+\definecolor{blueb}{HTML}{0070FF}
+\definecolor{darkviolet}{HTML}{9400D3}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % MARGINS
