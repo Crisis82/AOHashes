@@ -82,7 +82,7 @@ fn bench_sponge(c: &mut Criterion) {
 criterion_group! {
     name = benches;
     // config = Criterion::default().sample_size(10);
-    config = Criterion::default().sample_size(1000).measurement_time(Duration::from_secs(1000));
+    config = Criterion::default().sample_size(1000).measurement_time(Duration::from_secs(800));
     targets = bench_sponge
 }
 criterion_main!(benches);

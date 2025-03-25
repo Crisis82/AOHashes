@@ -3,7 +3,7 @@ use lazy_static::lazy_static;
 
 /// State width t, where t >=3 and
 /// usually is equal to 3, 4, 5, 6 or 8.
-pub const WIDTH: usize = 8;
+pub const WIDTH: usize = 3;
 
 /// Number of rounds, depending on the width.
 pub(crate) const ROUNDS: usize = {

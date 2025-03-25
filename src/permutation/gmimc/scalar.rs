@@ -33,8 +33,8 @@ impl Gmimc<BlsScalar> for ScalarPermutation {
     fn f(&mut self, round: usize, value: &mut BlsScalar) {
         // x + c_i
         *value = *value + ROUND_CONSTANTS[round];
-        // ^3
-        *value = value.square() * *value;
+        // ^5
+        *value = value.square().square() * *value;
     }
 
     fn erf(&mut self, state: &mut [BlsScalar]) {

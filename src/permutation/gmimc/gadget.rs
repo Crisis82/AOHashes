@@ -43,10 +43,14 @@ impl<'a> Gmimc<Witness> for GadgetPermutation<'a> {
         let constraint = Constraint::new().left(1).a(*value).constant(constant);
         let sum = self.composer.gate_add(constraint);
 
-        // ^ 3
+        // ^ 2
         let constraint = Constraint::new().mult(1).a(sum).b(sum);
         let sum2 = self.composer.gate_mul(constraint);
-        let constraint = Constraint::new().mult(1).a(sum2).b(sum);
+        // ^ 4
+        let constraint = Constraint::new().mult(1).a(sum2).b(sum2);
+        let sum4 = self.composer.gate_mul(constraint);
+        // ^5
+        let constraint = Constraint::new().mult(1).a(sum4).b(sum);
         *value = self.composer.gate_mul(constraint);
     }
 
