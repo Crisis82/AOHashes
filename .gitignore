@@ -25,6 +25,8 @@ Cargo.lock
 **/*.dvi
 **/*.fdb_latexmk
 **/*.fls
+**/*.lof
+**/*.lot
 **/*.log
 **/*.out
 **/*.out.ps
