@@ -14,7 +14,7 @@
 
     % Anemoi
     \addplot[mark=x, color=red] plot coordinates {
-        (4,663)
+        (4,664)
         (6,428)
         (8,573)
     };
@@ -32,11 +32,11 @@
     
     % GMiMC
     \addplot[mark=x, color=green] plot coordinates {
-        (3,43)
-        (4,45)
-        (5,24)
-        (6,26)
-        (8,30)
+        (3,61)
+        (4,63)
+        (5,33)
+        (6,35)
+        (8,41)
     };
     \addlegendentry{\texttt{GMiMC}}
     
