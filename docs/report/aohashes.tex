@@ -14,35 +14,46 @@
 \pagebreak
 
 \begin{abstract}
-  This paper presents a comparative analysis of several Arithmetization-Oriented (AO) cryptographic primitives, designed to enhance the efficiency of Zero-Knowledge (ZK) proofs. AO primitives are optimized to work within the constraint-based framework of modern ZK-proof systems like \textsf{Plonk}, which is widely used for privacy-focused applications such as blockchain and secure authentication.
+This paper presents a comparative analysis of several Arithmetization-Oriented (AO) cryptographic primitives, designed to enhance the efficiency of Zero-Knowledge (ZK) proofs.
+AO primitives are optimized to work with constraint-based ZK proof systems like \textsf{Plonk}, which are widely used for privacy-focused applications such as blockchain and secure authentication.
 
-By implementing and testing these primitives in the Rust programming language, using the Dusk Network’s \textsf{Plonk} library, we aim to assess their performance in terms of computational speed, constraint complexity, and proof generation efficiency. The primitives evaluated include \texttt{GMiMC}, \textsc{Poseidon}, \texttt{Rescue}, \texttt{Rescue-Prime}, \textsc{Griffin}, \texttt{Anemoi} and \texttt{Arion}, each with unique design strategies that balance the trade-offs between security, efficiency and polynomial degree.
+By implementing these primitives in the Rust programming language and testing them with the Dusk Network’s \textsf{Plonk} library, we aim to assess their performance in terms of computational speed, constraint complexity and proof generation efficiency.
+The primitives evaluated include \texttt{GMiMC}, \textsc{Poseidon}, \texttt{Rescue}, \texttt{Rescue-Prime}, \textsc{Griffin}, \texttt{Anemoi} and \texttt{Arion}, each with unique design strategies that balance the trade-offs between security, efficiency and polynomial degree.
 
-Our analysis provides a clear comparison of how these primitives perform under various conditions, highlighting their strengths and limitations. We also discuss which primitives may be best suited for specific applications based on their stability, computational overhead, and adaptability to different field sizes and security levels. By shedding light on these performance characteristics, we hope to guide future optimizations and inspire new cryptographic designs that can further enhance the efficiency and scalability of ZK-proof systems.
-
+Our analysis provides a clear comparison of how these primitives perform under various conditions, highlighting their strengths and limitations.
+We also discuss which primitives may be best suited for specific applications based on their stability, computational overhead or adaptability to different field sizes and security levels.
+By shedding light on these performance characteristics, we hope to guide future optimizations and inspire new cryptographic designs that can further enhance the efficiency ZK proof systems.
 \end{abstract}
 
 \chapter{Introduction}\label{chap:intro}
 
-In recent years, the field of cryptography has seen a surge of interest in Zero-Knowledge (ZK) proofs—a groundbreaking technology that allows one party (the prover) to prove the validity of a computation to another party (the verifier) without revealing any underlying data. This unique property makes ZK proofs particularly valuable in applications where privacy and data security are crucial, such as blockchain technology, authentication systems, and secure financial transactions.
+In recent years, the field of cryptography has seen a surge of interest in Zero-Knowledge (ZK) proofs, which allows one party (the prover) to prove the validity of a computation to another party (the verifier) without revealing any underlying data.
+This unique property makes ZK proofs particularly valuable in applications where privacy and data security are crucial, such as blockchain technology, authentication systems and secure financial transactions.
 
-Among the various types of ZK proofs, a special category known as non-interactive proofs has gained popularity. Unlike interactive ZK proofs, non-interactive proofs do not require back-and-forth communication between the prover and verifier, making them ideal for decentralized environments like blockchains.
+Among the various types of ZK proofs, a special category known as non-interactive proofs has gained popularity.
+Unlike interactive ZK proofs, non-interactive proofs do not require communication between the prover and the verifier, making them ideal for decentralized environments like blockchains.
 
-This paper focuses on a specific type of non-interactive ZK proof system called \textsf{Plonk}~\cite{plonk}, which belongs to the SNARK (Succinct Non-interactive ARguments of Knowledge) family. \textsf{Plonk} proofs are based on advanced mathematical structures known as arithmetic circuits, which are translated into constraints and then evaluated as polynomials. This structure makes the proof generation process more efficient while keeping computational complexity low.
+This paper focuses on a specific type of non-interactive ZK proof system called \textsf{Plonk}~\cite{plonk}, which belongs to the SNARK\footnote{Succinct Non-interactive ARguments of Knowledge} family.
+\textsf{Plonk} proofs are based on arithmetic circuits, which are translated into constraints and finally represented as polynomials that will be evaluated by the verifier.
+This structure, even if it at first glance seems complex and computationally heavy, in reality is very efficient and powerful for solving ZK proof problems.
 
-However, one challenge with this approach is that many traditional cryptographic primitives are not well-suited to work efficiently within \textsf{Plonk}'s constraint-based framework. To address this, researchers have developed a new class of cryptographic primitives designed specifically for this purpose, known as Arithmetization-Oriented (AO) primitives. These AO primitives aim to maximize the performance of ZK proofs by minimizing the computational overhead associated with constraints, particularly when performing basic operations like addition and multiplication.
+However, one challenge with ZK proof systems including \textsf{Plonnk} is that traditional cryptographic primitives are not well-suited to work within these terms and structures, losing all their efficiency from a performance point of view.
+To address this, researchers have developed a new class of cryptographic primitives designed specifically for this purpose, known as Arithmetization-Oriented (AO) primitives.
+These AO primitives aim to maximize the performance of ZK proofs by minimizing the computational overhead associated with constraints, particularly when performing basic operations like addition and multiplication.
 
-In this paper, we explore and evaluate several of the latest AO primitives that have been implemented in the Rust programming language and tested using the Dusk Network's \textsf{Plonk} ZK library~\cite{dusk-plonk}. Our goal is to compare these primitives based on their performance, efficiency, and suitability for different use cases. By highlighting their strengths and weaknesses, we aim to provide valuable insights for developers and researchers interested in optimizing ZK-proof systems and designing new cryptographic solutions.
+In this paper, we explore and evaluate several of the latest AO primitives that have been proposed and published in these last years through a Rust programming language implementation and the testing with the Dusk Network's \textsf{Plonk} ZK library~\cite{dusk-plonk}.
+Our goal is to compare these primitives based on their performance, efficiency and suitability for different use cases.
+By highlighting their strengths and weaknesses, we aim to provide valuable insights for developers and researchers interested in optimizing ZK-proof systems and designing new cryptographic solutions.
 
 \chapter{Overview}\label{chap:overview}
 
-As mentioned in the introductory \autoref{chap:intro}, the primitives that have been tested in this project are arithmetization oriented and this is because for zero-knowledge proof, plain evaluation is important, but proof generation and verification is even more critical, and this design provides an efficient solution for performing both operations.
+As mentioned in the introductory \autoref{chap:intro}, the primitives that have been tested in this project are Arithmetization-Oriented and this is because for Zero-Knowledge proofs plain evaluation is important, but proofs generation and verification is even more critical, and this design provides an efficient solution for performing both operations.
 Another important aspect of AO primitives is that they are suitable for a vast number of field sizes and security levels, making them very elastic and adaptable to different scenarios and applications.
 However, as we will evidence from this paper's results, the design of these primitives can severely affect the computational time of generating and verifying proofs even though the same environment is provided and the same instances are used.
 
-Because the Dusk Network team provides a library that implements the \textsf{Plonk} system~\cite{dusk-plonk}, plus they also implement the primitive \textsc{Poseidon}~\cite{dusk-poseidon}, we have decided to implement the primitives using the same programming language used for these two implementations (\textsl{i.e.} Rust) in a single project, in order to have the same baseline for all the primitives in order to conduct a fair comparison between them, minimizing potential sources of errors in our final results.
+Because the Dusk Network team provides a library that implements the \textsf{Plonk} system~\cite{dusk-plonk}, plus they also implement the primitive \textsc{Poseidon}~\cite{dusk-poseidon}, we have decided to implement all the remaining primitives using the same programming language used for these two implementations (\textsl{i.e.} Rust) in a single project, in order to have the same baseline for all the primitives and being able to conduct a fair comparison between them, minimizing potential sources of errors in our final results.
 
-For this reason we have chosen to work on only one curve, which is the BLS12-381 one, with $p = 52435875175126190479447740508185965837690552500527637822603658699938581184513$.
+For this reason we have chosen to work on only one the BLS12-381 elliptic curve, with\\ $p = 52435875175126190479447740508185965837690552500527637822603658699938581184513$.
 
 \section{Primitives}\label{sec:primitives}
 
@@ -61,7 +72,8 @@ We can split them into two categories: in the \textit{first category} we found t
 
 \subsection{\texttt{GMiMC}}\label{subsec:gmimc}
 
-The first function implemented in this project has been \texttt{GMiMC}\footnote{Generalized MiMC}: a hash function based on unbalanced Feistel networks with a low multiplicative complexity that suits well ZK-SNARK applications. The mapping used in the Feistel networks is $x \rightarrow x^d$, which is a design idea by Nyberg and Knudsen, that has been shown to lead to efficient instatiations for SNARKs~\cite{mimc}. Among the available Feistel network modes, for this project we implemented the ERF\footnote{Expanding Round Function} variant, which schema is depicted in \autoref{fig:gmimc}.
+The first function implemented in this project it has been \texttt{GMiMC}\footnote{Generalized MiMC}: a hash function based on unbalanced Feistel networks with a low multiplicative complexity that suits well ZK-SNARK applications.
+The mapping used in the Feistel networks is $x \rightarrow x^d$, which is a design idea by Nyberg and Knudsen, that has been shown it leads to efficient instatiations for SNARKs~\cite{mimc}. Among the available Feistel network modes, for this project we implemented the ERF\footnote{Expanding Round Function} variant, which schema is depicted in \autoref{fig:gmimc}.
 
 \begin{figure}[H]
   \begin{center}
@@ -70,14 +82,14 @@ The first function implemented in this project has been \texttt{GMiMC}\footnote{
   \caption{Single round of $\texttt{GMiMC}_\texttt{ERF}$~\cite[Fig.~2]{gmimc}.}\label{fig:gmimc}
 \end{figure}
 
-As it is possible to deduct from the above schema, a single $\texttt{GMiMC}_\texttt{erf}$ round is composed of the following operations:
+As it is possible to deduct from the above schema, a single $\texttt{GMiMC}_\texttt{ERF}$ round is composed of the following operations:
 \begin{itemize}
   \item Computation of $y = F(x_0): x_0 \rightarrow x_0^d$, where $x_0$ is the first element of the state;
   \item XOR addition between each element of the state except the first one, and the output $y$ of $F$;
   \item Left-rotation of the state by one position.
 \end{itemize}
 
-Some common instatiations of \texttt{GMiMC} to achieve the minimum security of 128 bits over the curve BLS12-381 are shown in \autoref{tab:gmimcinstances}, while the formula used to compute the number of rounds $n$~\cite[Tab.~2,Tab.~3]{gmimc} is:
+Some common instatiations of \texttt{GMiMC} to achieve the minimum security of 128 bits over the curve BLS12-381 are shown in \autoref{tab:gmimcinstances}, while the formula used to compute the minimum number of rounds $n$~\cite[Tab.~2,Tab.~3]{gmimc} against some common cryptographic attacks is:
 \begin{equation}
   n = \max \left\{ n_{\text{Int}}, n_{\text{HighOrd}}, n_{\text{RTDif}} \right\},
   \label{eq:gmimcrounds}
@@ -88,7 +100,7 @@ where
   n_{\text{HighOrd}} & = 2 + 2t + \left \lceil 2 \cdot \log_d(t) \right\rceil ,\\[6pt]
   n_{\text{RTDif}} & = 2 + \left \lceil (t^2 + t) \cdot \frac{\log_2(p)}{2 \cdot (\log_2(p) - 1)} \right\rceil ,
 \end{align}
-where $t$ is the state width, $d$ is the exponent of the mapping function $F$ (\textsl{i.e.} 5) and $p$ is the prime used for our curve.
+where $t$ is the state width, $d$ is the exponent of the mapping function $F$ (in our chase 5) and $p$ is the prime used for our curve.
 
 \begin{table}[H]
   \caption{$\texttt{GMiMC}_\texttt{ERF}$ instances for $d = 5$.}\label{tab:gmimcinstances}
@@ -105,8 +117,9 @@ where $t$ is the state width, $d$ is the exponent of the mapping function $F$ (\
 \subsection{\textsc{Poseidon}}\label{subsec:poseidon}
 
 \textsc{Poseidon} is a \textbf{sponge function}~\cite{sponge} whose inner permutation function named $\textsc{Poseidon}^\pi$ is an unkeyed version of the \textsc{Hades} strategy~\cite{hades}.
-The $\textsc{Poseidon}^\pi$ permutation exploits two round functions, respectively denoted as \textit{full} and \textit{partial}, and their difference resides in how the S-Box\footnote{Substitution Box} is applied, precisely in the full round it is applied to each element of the state, while in the partial one only to the last element of the state. 
-The decision to opt for this design strategy in the permutation function is attributable to the goal of improving \textsc{Poseidon}'s performance even with a high number of rounds, by lightening the final computational cost with the subtraction of some S-Boxes.
+The $\textsc{Poseidon}^\pi$ permutation exploits two round functions, respectively denoted as \textit{full} and \textit{partial}, and their difference resides in how the S-Box\footnote{Substitution Box} is applied.
+Precisely, in the full round version the S-Box is applied to each element of the state, while in the partial one only to the last element of the state. 
+The decision to opt for this design strategy in the permutation function is attributable to the goal of improving \textsc{Poseidon}'s performance even with a high number of rounds, by lightening the final computational cost with the removal of some S-Boxes.
 \begin{note}
 It is important to notice that $\textsc{Poseidon}^\pi$ can be adjusted to use only full rounds and achieving in this way a greater level of security.
 However, the opposite, \textsl{i.e.} using only partial rounds, is strongly discouraged because to achieve a minimum level of security a minimal amount of full rounds are still required, where the exact value depends on the size $t$ of the state.
@@ -119,7 +132,7 @@ A single round is composed of the following concatenation of functions:
   \item \textit{MixLayer} (M): matrix-vector multiplication between a fixed matrix and the state, where the matrix is a square MDS\footnote{Maximum Distance Separable} matrix chosen such that no subspace trail with inactive/active S-Boxes can be set up for more than $t-1$ rounds, with $t$ the size of the state.
 \end{itemize}
 
-In \autoref{fig:poseidon} are shown the visual representations of the internal structure of the $\textsc{Poseidon}^\pi$ function, while in \autoref{tab:poseidoninstances} are collected the most commonly used instantiations for \textsc{Poseidon}~\cite[Tab.2]{poseidon}.
+In \autoref{fig:poseidon} is shown the complete structure of the $\textsc{Poseidon}^\pi$ function, while in \autoref{tab:poseidoninstances} are collected the most commonly used instantiations for \textsc{Poseidon}~\cite[Tab.2]{poseidon}.
 
 \begin{figure}[H]
   \begin{center}
@@ -146,21 +159,22 @@ In \autoref{fig:poseidon} are shown the visual representations of the internal s
 \subsection{\texttt{Rescue}}\label{subsec:rescue}
 
 The \texttt{Rescue} primitive is a sponge function based on the \texttt{Marvellous} design strategy and the focus of the authors of this primitive was realizing a secure and robust function, rather than an efficient one, while keeping a simple structure.
-For this purpose, they proposed the \texttt{Marvellous} strategy which is a SPN\footnote{Substitution-Permutation Network} round function, where each round is split into two phases and each phase is the composition of the different operations.
+For this purpose, they proposed the \texttt{Marvellous} strategy which is a SPN\footnote{Substitution-Permutation Network} round function, where each round is split into two phases and each phase is the composition of different operations.
 
 A single round is organized as follows:
 \begin{itemize}
   \item \textbf{First phase}
   \begin{itemize}
     \item \textit{Inverse S-Box} ($\text{S}^{-1}$): application of the inverse power map $x_i \rightarrow x_i^{\frac{1}{d}}$ to each element of the state;
-    \item \textit{MixLayer} (M): matrix-vector multiplication between an MDS matrix $M$ and the state;
-    \item \textit{AddRoundConstant} (ARC): addition of a constant $c^r_i$ to each element of the state $s_i$ where $0 \le i < t$ is the index of the elements of the states, $r$ is the round value and $t$ the state width;
+    \item \textit{MixLayer} (M): matrix-vector multiplication between an MDS matrix and the state;
+    \item \textit{AddRoundConstant} (ARC): addition of a constant $c^r_i$ to each element of the state $x_i$ where $0 \le i < t$ is the index of the elements of the states and $r$ is the round value and $t$ the state width;
   \end{itemize}
+  \newpage
   \item \textbf{Second phase}
   \begin{itemize}
     \item \textit{S-Box} (S): application of the power map $x_i \rightarrow x_i^d$ to each element of the state;
-    \item \textit{MixLayer} (M): matrix-vector multiplication with the same MDS matrix $M$ of the first phase;
-    \item \textit{AddRoundConstant} (ARC): addition another set of constants $c^r_{t+i}$ to each element of the state (has been used the same notation of the first phase).
+    \item \textit{MixLayer} (M): matrix-vector multiplication with the same MDS matrix of the first phase;
+    \item \textit{AddRoundConstant} (ARC): addition of another set of constants $c^r_{t+i}$ to each element of the state (it has been used the same notation of the first phase).
   \end{itemize}
 \end{itemize}
 
@@ -205,14 +219,14 @@ Therefore, the most common instantiations of \texttt{Rescue} computed using the 
 
 \subsection{\texttt{Rescue-Prime}}\label{subsec:rescueprime}
 
-The hash function \texttt{Rescue-Prime} has the same general underlying structure of \texttt{Rescue}~\autoref{subsec:rescue}, but with minor adjustments to simplify the implementation, which are:
+The hash function \texttt{Rescue-Prime} has the same general underlying structure of \texttt{Rescue}~(\autoref{subsec:rescue}), but with minor adjustments to simplify the implementation, which are:
 \begin{itemize}
   \item Simplification of the round constants' derivation function;
   \item Reduction of the security margin to its half (\textsl{i.e.} from $100\%$ to $50\%$);
   \item Flipping the order of the S-Boxes.
 \end{itemize}
 
-The authors decided to not override the previous \texttt{Rescue} hash function, but to deploy these changes in a new version and to do so it has been decided to give it a new name to maintain a clear distinction between the two versions.
+The authors decided to not override the previous \texttt{Rescue} hash function, but to deploy these changes in a new version and to do so they decided to give it a new name to maintain a clear distinction between the two versions.
 In fact, even the inner permutation function changed name to \texttt{Rescue-XLIX}\footnote{Rescue Forty-nine}.
 
 The round function described for \texttt{Rescue} is still valid for \texttt{Rescue-Prime}, but with the changes mentioned above, \textsl{i.e.} swap of the S-Boxes order.
@@ -226,9 +240,10 @@ The structure on which \textsc{Griffin} has been built upon is called \textit{Ho
 
 The internal permutation function implemented for \textsc{Griffin} is called \textsc{Griffin-$\pi$} and has been designed to lower the minimum number of rounds while maintain a certain security level; this is achieved by the introduction of an exponentiation of very high degree on only one element of the state. This choice allows reducing the number of rounds without increasing too much the computational complexity and the number of constraints in the ZK proof.
 
+\newpage
 A single round of the permutation function \textsc{Griffin-$\pi$} is organized as follows:
 \begin{itemize}
-  \item \textit{S-Box} (S): depending on the element's position, the transformation of the \textit{S-Box} is different and its formula is
+  \item \textit{S-Box} (S): depending on the element's position, the transformation of the \textit{S-Box} is different and its formula~\cite[Eq.~6]{griffin} is
   \begin{equation}
     y_i = \left\{
       \begin{array}{ll}
@@ -251,7 +266,7 @@ A single round of the permutation function \textsc{Griffin-$\pi$} is organized a
   \end{equation}
   and $\alpha_i$,$\beta_i$ are constants generated \textsl{s.t.} $\alpha_i^2 - 4 \cdot \beta_i$ is a quadratic non-residue modulo $p$;
   \item \textit{MixLayer} (M): matrix-vector multiplication between an MDS matrix and the state;
-  \item \textit{AddRoundConstant} (ARC): addition of the round constant $c^r$, where $r$ is the round value, to each element of the state. In the last round (\textsl{i.e.} $n-1$) the round constant is equal to 0, thus this operation can be omitted in the implementation.
+  \item \textit{AddRoundConstant} (ARC): addition of the round constant $c^r$, where $r$ is the round value, to each element of the state. In the last round (\textsl{i.e.} $n-1$), the round constant is equal to 0, thus this operation can be omitted in the implementation.
 \end{itemize}
 
 Before computing the \textsc{Griffin-$\pi$} permutation function on the needed rounds, the state needs to be initialized with the application of the \textit{MixLayer} matrix-vector multiplication for an increased diffusion and better security.
@@ -289,13 +304,14 @@ where $\kappa$ is the bits security level (in our case 128), $p$ is the prime us
 
 To improve the efficiency in terms of \textbf{evaluation} and \textbf{verification} of zero-knowledge proof circuits, the primitive \texttt{Anemoi} has been designed exploiting the strength of \textbf{CCZ-equivalence}.
 \texttt{Anemoi} is a sponge function whose inner permutation doesn't implement the usual S-Box structure, but instead a new design called \texttt{Flystel}.
+
 There are two types of \texttt{Flystel} functions:
 \begin{itemize}
   \item Open $\texttt{Flystel}$ $\mathcal{H}$: high degree permutation used in plain evaluation (\autoref{subfig:openflystel});
   \item Closed $\texttt{Flystel}$ $\mathcal{V}$: used for the proof generation because is a low degree function (\autoref{subfig:closedflystel}).
 \end{itemize}
 The crucial property that these two function have is that they are \textbf{CCZ-equivalent}, \textsl{i.e.} it is possible to encode the verification of the evaluation of the open \texttt{Flystel} using the polynomial representation of the closed \texttt{Flystel}.
-These functions have been implemented in this project using the parameters suggested in the \texttt{Anemoi} documentation~\cite[Sec.~4.4]{anemoi} for odd prime characteristic, which is our case due to our choice of prime $p$.
+These functions have been implemented in this project using the parameters suggested in the \texttt{Anemoi} documentation~\cite[Sec.~4.4]{anemoi} for odd prime characteristic, which is our case due to our choice of the prime $p$.
 
 \begin{figure}[H]
   \begin{center}
@@ -303,34 +319,34 @@ These functions have been implemented in this project using the parameters sugge
     \begin{subfigure}{0.40\textwidth}
       \centering
       \includegraphics[width=0.55\textwidth]{anemoi/open_flystel.png}
-      \caption{Open-$\texttt{Flystel}$}\label{subfig:openflystel}
+      \caption{Open-$\texttt{Flystel}$.}\label{subfig:openflystel}
     \end{subfigure}
     \hfill
     \begin{subfigure}{0.40\textwidth}
       \centering
       \includegraphics[width=0.6\textwidth]{anemoi/closed_flystel.png}
-      \caption{Closed-$\texttt{Flystel}$}\label{subfig:closedflystel}
+      \caption{Closed-$\texttt{Flystel}$.}\label{subfig:closedflystel}
     \end{subfigure}
     \hspace{0.5cm}
   \end{center}
-  \caption{$\texttt{Flystel}_p$ in odd prime characteristic.}\label{fig:flystel}
+  \caption{$\texttt{Flystel}$ structure~\cite[Fig.~3]{anemoi}.}\label{fig:flystel}
 \end{figure}
 
 The management of the state in the \texttt{Anemoi} round function is different from the previous primitives, because the state is divided into two halves of length $l = \frac{t}{2}$ (where $t$ is the state size), respectively called $X$ and $Y$, for which the operations slightly differ.
 
-The round is composed of the following steps:
+A single round, depicted in \autoref{fig:anemoi},  is composed of the following steps:
 \begin{itemize}
   \item \textit{AddRoundConstant} (ARC): addition of the round constants $c^r_i$ to the half $X$ and of $d^r_i$ to the half $Y$, where $0 \le i < l$ is the index of the elements of the states and $r$ is the round value;
   \item \textit{MixLayer} (M): matrix-vector multiplication between a matrix $M_X$ and the $X$ half and also between matrix $M_Y$ and the $Y$ half, where $M_Y$ is the row-permuted version of $M_X$;
   \item \textit{PHT~\footnote{Pseudo-Hadamard Transformation}} (P): application of the PHT to mix the two halves, which is defined as:
-      \begin{gather}
-        Y \leftarrow Y + X, \\
-        X \leftarrow X + Y\ .
+      \begin{align}
+        Y &\leftarrow Y + X, \\
+        X &\leftarrow X + Y\ .
         \label{eq:pht}
-      \end{gather}
-    \item \textit{Flystel} (H): application of previously described open \texttt{Flystel} gate to the state.
+      \end{align}
+    \item \textit{Flystel} (H): application of previously described \texttt{Flystel} function to the state.
 \end{itemize}
-and the visual representation is depicted in \autoref{fig:anemoi}.
+
 \begin{figure}[H]
   \begin{center}
     \includegraphics[width=0.65\textwidth]{anemoi/round.png}
@@ -338,7 +354,7 @@ and the visual representation is depicted in \autoref{fig:anemoi}.
   \caption{$r$-th round of the \texttt{Anemoi} permutation \cite[Fig.~6]{anemoi}.}\label{fig:anemoi}
 \end{figure}
 
-The \texttt{Anemoi} permutation function works by iterating the round function for the needed number of rounds and finally compute an additional \textit{MixLayer} on the state.
+The \texttt{Anemoi} permutation function works by iterating the round function for the needed number of rounds and finally completing the permutation with an additional application of the \textit{MixLayer} operation onto the state.
 
 The most common instantiations of this primitive are shown in the following \autoref{tab:aneomiinstances} and the number of rounds $n$ is computed with the following formula~\cite[Eq.~(2)]{anemoi}:
 
@@ -366,9 +382,9 @@ where $l = \frac{t}{2}$ is the width of the halves and $t$ the total size of the
 The last primitive implemented in this project is \texttt{Arion}, from which has been built the respective hash function named \texttt{ArionHash}.
 The permutation function inside \texttt{Arion} is different from the previous ones because is used the \textit{GTDS}\footnote{Generalized Triangular Dynamical System} structure~\cite{gtds}, which is an alternative solution to the same approach used in the primitive \textsc{Griffin}, where the aim was to maintain a low multiplicative complexity and a low number of rounds, without affecting the security level.
 
-A single round through \texttt{Arion} is computed with the following operations:
+A single round through \texttt{Arion}, depicted in \autoref{fig:arion}, is computed with the following operations:
 \begin{itemize}
-  \item \textit{GTDS}: application of the GTDS structure to the state, which is defined as follows~\cite[Def.~1]{arion} (depicted in \autoref{fig:gtds}):
+  \item \textit{GTDS}: application of the GTDS function to the state, which is defined as follows~\cite[Def.~1]{arion} (depicted in \autoref{fig:gtds}):
     \begin{equation}
       f_i(x_1, \ldots, x_t) = \left\{
           \begin{array}{ll}
@@ -402,11 +418,11 @@ A single round through \texttt{Arion} is computed with the following operations:
         \end{equation}
     \end{itemize}
   \item \textit{MixLayer} (M): matrix-vector multiplication between a fixed matrix and the state;
-  \item \textit{AddRoundConstant} (ARC): addition of the round constant to each element of the state.
+  \item \textit{AddRoundConstant} (ARC): addition of the round constant $c^r_i$ to each element $x_i$ of the state, where $0 \le i < t$ is the element index, $t$ the state wisth and $r$ the number of the round.
 \end{itemize}
-Note that in the \texttt{Arion} documentation~\cite{arion}, the last two operations are seen as a single layer called \textit{AffineLayer}~\cite[Def.~3]{arion}.
-
-The visual representation of a single round is shown below in \autoref{fig:arion}.
+\begin{note}
+  Note that in the \texttt{Arion} documentation~\cite{arion}, the last two operations are seen as a single layer called \textit{AffineLayer}~\cite[Def.~3]{arion}.
+\end{note}
 
 \begin{figure}[H]
   \begin{center}
@@ -419,7 +435,7 @@ The visual representation of a single round is shown below in \autoref{fig:arion
   \begin{center}
     \includegraphics[width=0.25\textwidth]{arion/round.png}
   \end{center}
-  \caption{Single round of the \texttt{Arion} permutation.}\label{fig:arion}
+  \caption{$r$-th round of the \texttt{Arion} permutation.}\label{fig:arion}
 \end{figure}
 
 Furthermore, a complete permutation in \texttt{Arion} is done with an initial application of the \textit{MixLayer} to the state and then the iteration of the round function for the number of rounds needed.
@@ -445,12 +461,12 @@ There are two types of \textsf{Plonk} constraints:
 \begin{itemize}
   \item 2-wire-input constraints, which are of the form
     \begin{equation}
-      (a \cdot b) \cdot q_M + a \cdot q_L + b \cdot q_R + c \cdot q_O + q_C = 0 ;
+      (a \cdot b) \cdot q_M + a \cdot q_L + b \cdot q_R + c \cdot q_O + q_C = 0 ,
       \label{eq:2inconstraint}
     \end{equation}
   \item 3-wire-input constraints, which are of the form
     \begin{equation}
-      (a \cdot b) \cdot q_M + a \cdot q_L + b \cdot q_R + c \cdot q_O + d \cdot q_F + q_C = 0 ;
+      (a \cdot b) \cdot q_M + a \cdot q_L + b \cdot q_R + c \cdot q_O + d \cdot q_F + q_C = 0 ,
       \label{eq:2inconstraint}
     \end{equation}
 \end{itemize}
@@ -459,30 +475,30 @@ where
   \item $a$ is the input value of the left variable and $b$ of the right variable;
   \item $c$ is the value of the output variable;
   \item $d$ is the fourth variable;
-  \item and $q_M$, $q_L$, $q_R$, $q_O$, $q_F$ and $q_C$ are coefficients that select the operations to be performed, \textsl{i.e.} enables the corresponding wires of the circuit. In the given order they are respectively the selectors for the multiplication, the left wire, the right wire, the output wire, the fourth wire and the constant.
+  \item $q_M$, $q_L$, $q_R$, $q_O$, $q_F$ and $q_C$ are coefficients that select the operations to be performed, \textsl{i.e.} they enables the corresponding wires of the circuit. In the given order they are respectively the selectors for the multiplication, the left wire, the right wire, the output wire, the fourth wire and the constant.
 \end{itemize}
-In this project have been used both 2-wire-input and 3-wire-input constraints to build the ZK proofs of the implemented primitives and because most of the permutation functions some operations in common (\text{e.g.} \textit{AddRoundConstant}), we will provide here the explanations of how each implemented operation is represented in the \textsf{Plonk} constraint system.
+In this project have been used both 2-wire-input and 3-wire-input constraints to build the ZK proofs of the implemented primitives and because most of the permutation functions have some operations in common (\text{e.g.} \textit{AddRoundConstant}), we will provide here the explanations of how each implemented operation is represented in the \textsf{Plonk} constraint system.
 
-\paragraph{AddRoundConstant}\label{par:arc}
+\subsection{AddRoundConstant}\label{subsec:arc}
 
 Because the \textit{AddRoundConstant} operation is a simple addition of a constant to an element the state iterated for all the elements of the state, the corresponding constraint is a 2-wire-input constraint where the left wire $q_L$ is enabled (\textsl{i.e.} set to 1) and the corresponding $a$ variable is equal to state element, plus the constant selector is set to be equal to the round constant.
 
-\paragraph{MixLayer}\label{par:mixlayer}
+\subsection{MixLayer}\label{subsec:mixlayer}
 
-The mix layer being a sequence of additions in the same row iterated for all the rows, it can naively be represented as a sequence of 2-wire-input constraints, where the both selectors for left  and right  are enabled ($q_L = 1$ and $q_R = \text{matrix}_{i,j}$), the left wire ($a$) is equal to the temporary addition result and the right wire ($b$) is equal to the state element.
+The mix layer being a sequence of additions in the same row iterated for all the rows, it can naively be represented as a sequence of 2-wire-input constraints, where both selectors for left and right are enabled ($q_L = 1$ and $q_R = \text{matrix}_{i,j}$), the left wire input ($a$) is equal to the temporary addition result and the right wire input ($b$) is equal to the state element.
 The equation will have the following form
 \begin{equation}
-  1 \cdot \text{result} + \text{matrix}_{i,j} \cdot \text{state}_{i} = 0\ .
+  1 \cdot \text{result}_i + \text{matrix}_{i,j} \cdot \text{state}_{j} = 0\ .
   \label{eq:}
 \end{equation}
-This operation can obviously be optimized by using a 3-wire-input constraint and exploiting the fourth wire to do 3 additions per constraints, but this optimization is not implemented in this project for the reasons explained in the \autoref{chap:tests}.
+This operation can obviously be optimized by using a 3-wire-input constraint and exploiting the fourth wire input ($d$) to do 3 additions per constraints, but this optimization is not implemented in this project for the reasons explained in the \autoref{chap:tests}.
 
-\paragraph{Power}\label{par:power}
+\subsection{Power}\label{subsec:power}
 
 This operation is the most constraint consuming, because it requires several multiplications depending on the degree of the exponentiation.
 The optimal way to reduce the number of multiplications is to use the \textbf{exponentiation by squaring} technique to reach the desired degree, precisely we will have $\left\lceil \log_2(d) \right\rceil$ multiplications, depending on the exponent $d$.
 
-\paragraph{Inverse Power}
+\subsection{Inverse Power}\label{subsec:invpower}
 
 Using the same approach also for the inverse power operation is infeasible due to our choice of prime $p$, thus another approach has been used in this project.
 The equation that the verifier needs to check is
@@ -497,15 +513,56 @@ However, if we raise both sides of the equation to the power $d$ we will end wit
   \label{eq:xed}
 \end{equation}
 which for the prover is an evaluation equivalent to the previous equation (\ref{eq:xe}).
-In this way, we just need to compute $y$ and then create a new constraint like we did for the power operation (paragraph \ref{par:power}) and finally add it to the constraints of the proof.
+In this way, we just need to compute $y$ and then create a new constraint like we did for the power operation (\autoref{subsec:power}) and finally add it to the constraints of the proof.
 
-\paragraph{S-Box}\label{par:sbox}
+\subsection{S-Box}\label{subsec:sbox}
 
 Being each S-Box different for each permutation function, they have been crafted ad hoc for each primitive via a combination of additions, multiplications, power and inverse power as needed.
 
-\paragraph{Permutation functions}
+\subsection{Permutation functions}\label{subsec:perm}
 
-As the S-Box, also the permutation functions are all different, thus they have been ad hoc implemented for each primitive by stacking the operations of \textit{AddRoundConstant}~(paragraph \ref{par:arc}), \textit{MixLayer}~(paragraph \ref{par:mixlayer}) and \textit{S-Box}~(paragraph \ref{par:sbox}) in the right order to build the round function, and then iterating it for the needed number of rounds.
+As the S-Box, also the permutation functions are all different, thus they have been ad hoc implemented for each primitive by stacking the operations of \textit{AddRoundConstant}~(\autoref{subsec:arc}), \textit{MixLayer}~(\autoref{subsec:mixlayer}) and \textit{S-Box}~(\autoref{subsec:sbox}) in the right order to build the round function, and then iterating it for the needed number of rounds.
+
+As an example, we will show in algorithm \ref{alg:permexample} the pseudocode used for the $\textsc{Poseidon}_\pi$ full round function.
+
+\begin{algorithm}[H]
+  \caption{Proof generation inside $\textsc{Poseidon}_\pi$ full round function}\label{alg:permexample}
+  \begin{algorithmic}
+    \State $r \gets 0$
+    \While{$r \le \frac{n_{full}}{2}-1$} \Comment{Iteration for $\frac{n_{full}}{2}$ rounds}
+      \State $i \gets 0$
+      \While{$i \le t-1$} \Comment{AddRoundConstant}
+          \State $constraint$ $\gets$ Constraint($q_L$(1), a($witness_i$), $q_C(constant_r)$);
+          \State $witness_i$ $\gets$ $constraint2$.c(); \Comment{Recall that $c$ is the value of output wire}
+      \EndWhile
+      \\
+      \State $i \gets 0$
+      \While{$i \le t-1$} \Comment{S-Box}
+          \State $constraint2$ $\gets$ Constraint($q_M$(1), a($witness_i$), b($witness_i$));
+          \State $power2$ $\gets$ $constraint2$.c();
+          \\
+          \State $constraint4$ $\gets$ Constraint($q_M$(1), a($power2$), b($power2$));
+          \State $power4$ $\gets$ $constraint4$.c();
+          \\
+          \State $constraint5$ $\gets$ Constraint($q_M$(1), a($power4$), b($power4$));
+          \State $witness_i$ $\gets$ $constraint5$.c();
+          \\
+          \State $i \gets i+1$
+      \EndWhile
+      \\
+      \State $result \gets [0, 0, ..., 0]$ \Comment{result has size $t$}
+      \State $i \gets 0$
+      \While{$i \le t-1$} \Comment{MixLayer}
+        \State $j \gets 0$
+        \While{$i \le t-1$}
+          \State $constraint$ $\gets$ Constraint($q_L$(1), a($result_i$), $q_R(matrix_{i,j})$, b($witness_j$));
+          \State $result_i$ $\gets$ $constraint$.c();
+        \EndWhile
+      \EndWhile
+      \State $witnes \gets result$;
+    \EndWhile
+  \end{algorithmic}
+\end{algorithm}
 
 \section{Implementation}\label{sec:implementation}
 
@@ -522,8 +579,8 @@ The structure of the repository follows the standard hierarchy structure of a Ru
 
 For each primitive it has been decided to create two separate modes:
 \begin{enumerate}
-  \item plain hash function: this has been implemented in the files called \texttt{scalar.rs} and works with values in the BLS12-381 curve;
-  \item zero-knowledge proof generation and verification: inside the \texttt{gadget.rs} files have been implemented the operations of the permutation's functions that work with the \textsf{Plonk} constraint system.
+  \item \textbf{plain evaluation}: this has been implemented in the files called \texttt{scalar.rs} and works with values in the BLS12-381 curve;
+  \item \textbf{zero-knowledge proof generation and verification}: inside the \texttt{gadget.rs} files have been implemented the operations of the permutation's functions that work with the \textsf{Plonk} constraint system.
 \end{enumerate}
 Additionally, for each function there is a file \texttt{hash\_name.rs} (\textsl{e.g.} \texttt{gmimc.rs}) that defines the permutation and a \texttt{params.rs} which dynamically generates the parameters needed, like exponents, constants or matrices, by the permutation function.
 
@@ -559,7 +616,7 @@ runs the test on the \texttt{GMiMC} hash function over \textit{plain} and \texti
 
 The tests that will be presented in this chapter are divided into four categories, in order to have a complete comparison between the primitives and highlight the point of strength and weakness of each one:
 \begin{enumerate}
-  \item \textit{Plain performance}: the time of computation of the final digest working with scalar values in the BLS12-381 curve, measured in $\mu s$;
+  \item \textit{Plain evaluation performance}: the time of computation of the final digest working with scalar values in the BLS12-381 elliptic curve, measured in $\mu s$;
   \item Number of \textit{constraints}: the number of constraints needed by the primitive to generate a complete \textsf{Plonk} proof, which gives an idea of the computational cost of the proof;
   \item Zero-Knowledge \textit{proof generation}: the time needed to generate a proof measured in $ms$;
   \item Zero-Knowledge \textit{proof verification}: the time needed to verify the generated proof measured in $ms$;
@@ -605,7 +662,8 @@ It is important to notice that if the reader wants to reproduce the tests, this 
 
 The first test that we wanted to analyze was the raw performance of the primitives to compute a hash digest, thus working with values in our chosen curve, rather than polynomial constraints.
 
-In the following \autoref{tab:plain} have been collected the average times of the results for this testing category, expressed in $\mu s$:
+In the \autoref{tab:plain} have been collected the average times of the results for this testing category, expressed in $\mu s$, which have been subsequently plotted in the \autoref{plot:plain}, to have also a visual comparison between the timings.
+Note that for the sake of clarity of the plot, the color of \texttt{Rescue} and \texttt{Rescue-Prime} is the same, due to the fact that their timings are very close.
 
 \begin{table}[H]
   \caption{Plain timing performance in $\mu s$ with $d = 5$.}\label{tab:plain}
@@ -632,10 +690,6 @@ In the following \autoref{tab:plain} have been collected the average times of th
     \end{tabular}
   \end{center}
 \end{table}
-
-And all the above results have been plotted in the following \autoref{plot:plain}, to have also a visual comparison between the timings.
-
-Note that for the sake of clarity of the plot, the color of \texttt{Rescue} and \texttt{Rescue-Prime} is the same, due to the fact that their timings are very close.
 
 \begin{figure}[H]
   \hspace{60pt}\input{tikz/plain.tikz}
@@ -682,7 +736,7 @@ The general formulas to calculate the number of constraints for a single round o
 
 We used the variable $c_r$ to denote the constraints per round.
 
-Additionally, because of \textsc{Poseidon}'s design, where a round can be full or partial, we decided to show the number of constraints for both, round types and that's why for each cell there are two values, presented with the following notation \{partial\}/\{full\}.
+Additionally, because of \textsc{Poseidon}'s design, where a round can be full or partial, we decided to show the number of constraints for both, round types and that's why for each cell there are two values, presented with the following notation \{partial\}/\{full\}, as you can see in \autoref{tab:constraintsround}.
 
 \begin{table}[H]
   \caption{Number of constraints needed for a single round of the permutation with $d = 5$.}\label{tab:constraintsround}
@@ -756,7 +810,7 @@ On the other hand, thanks to its design that allow to keep the number of rounds 
 
 \section{Proof generation}\label{sec:proofgen}
 
-In the third test type, we focused on the time needed to generate a zero-knowledge proof with the Plonk constraint system, which we have collected in the following \autoref{tab:proofgen}:
+In the third test type, we focused on the time needed to generate a zero-knowledge proof with the Plonk constraint system, which we have collected in the \autoref{tab:proofgen} and then plotted in the \autoref{plot:proofgen} for having a visual comparison.
 
 \begin{table}[H]
   \caption{Proof generation performance's time in $ms$ with $d = 5$.}\label{tab:proofgen}
@@ -784,8 +838,6 @@ In the third test type, we focused on the time needed to generate a zero-knowled
   \end{center}
 \end{table}
 
-And the following \autoref{plot:proofgen} corresponds to the above data that have been plotted, to have also a visual comparison between the different primitives:
-
 \begin{figure}[H]
   \hspace{60pt}\input{tikz/proof.tikz}
   \caption{Proof generation performance's time in $ms$ with $d = 5$.}\label{plot:proofgen}
@@ -801,7 +853,7 @@ On the other spectrum of the tests' results, \textsc{Poseidon} is the worst prim
 
 \section{Proof verification}\label{sec:proofver}
 
-In the last category of tests, we focused on the verification process of the constraint generated in the Plonk system, and the results have been pretty much the same, around $7.26\pm0.03\ [ms]$ independently of the state width, for all the primitives.
+In the last category of tests we focused on the verification process of the constraint generated in the Plonk syste, and the results have been pretty much the same, around $7.26\pm0.03\ [ms]$ independently of the state width, for all the primitives.
 Due to these results, it has been decided to not show any table or plot like in the previous sections.
 
 \chapter{Conclusion}\label{chap:conclusion}
@@ -825,5 +877,9 @@ We hope that with this paper we have provided a good overview of the current sta
 \newpage
 \section{List of Tables}\label{sec:listoftables}
 \listoftables
+
+%\newpage
+%\section{List of Algorithms}\label{sec:listofalgorithms}
+\listofalgorithms
 
 \end{document}

@@ -31,7 +31,8 @@
 \graphicspath{ {figures/} }
 \usepackage{caption}
 \usepackage{subcaption}
-
+\usepackage{algorithm}
+\usepackage{algpseudocode}
 \usepackage{listings}
 \lstdefinestyle{scripts}{
     backgroundcolor=\color{bg},   
@@ -60,6 +61,12 @@
         \@starttoc{lot}%
 }
 \makeatother
+
+% \makeatletter
+% \renewcommand\listofalgorithms{%
+%         \@starttoc{loa}%
+% }
+% \makeatother
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % COLORS
