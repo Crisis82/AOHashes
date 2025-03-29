@@ -5,8 +5,9 @@
 % \usepackage[T1]{fontenc}
 % \usepackage[utf8]{inputenc}
 
-\usepackage{biblatex}
-\bibliography{bib/aohashes.bib,bib/abbrev0.bib}
+\usepackage[backend=biber,style=numeric,maxbibnames=99,doi=true,eprint=true]{biblatex}
+\addbibresource{bib/abbrev0.bib}
+\addbibresource{bib/aohashes.bib}
 
 \usepackage[tmargin=3cm,rmargin=1in,lmargin=1in,margin=0.85in,bmargin=3cm]{geometry}
 \usepackage{amsmath,amsfonts,amsthm,amssymb,mathtools}

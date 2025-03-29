@@ -37,13 +37,13 @@ This paper focuses on a specific type of non-interactive ZK proof system called 
 \textsf{Plonk} proofs are based on arithmetic circuits, which are translated into constraints and finally represented as polynomials that will be evaluated by the verifier.
 This structure, even if it at first glance seems complex and computationally heavy, in reality is very efficient and powerful for solving ZK proof problems.
 
-However, one challenge with ZK proof systems including \textsf{Plonnk} is that traditional cryptographic primitives are not well-suited to work within these terms and structures, losing all their efficiency from a performance point of view.
+However, one challenge with ZK proof systems including \textsf{Plonk} is that traditional cryptographic primitives are not well-suited to work within these terms and structures, losing all their efficiency from a performance point of view.
 To address this, researchers have developed a new class of cryptographic primitives designed specifically for this purpose, known as Arithmetization-Oriented (AO) primitives.
 These AO primitives aim to maximize the performance of ZK proofs by minimizing the computational overhead associated with constraints, particularly when performing basic operations like addition and multiplication.
 
 In this paper, we explore and evaluate several of the latest AO primitives that have been proposed and published in these last years through a Rust programming language implementation and the testing with the Dusk Network's \textsf{Plonk} ZK library~\cite{dusk-plonk}.
 Our goal is to compare these primitives based on their performance, efficiency and suitability for different use cases.
-By highlighting their strengths and weaknesses, we aim to provide valuable insights for developers and researchers interested in optimizing ZK-proof systems and designing new cryptographic solutions.
+By highlighting their strengths and weaknesses, we aim to provide valuable insights for developers and researchers interested in optimizing ZK proof systems and designing new cryptographic solutions.
 
 \chapter{Overview}\label{chap:overview}
 
@@ -200,7 +200,7 @@ where
 which respectively are 
 \begin{itemize}
   \item $l_0$ the maximum number of rounds that can be generically attacked via Differential or Linear Cryptanalysis, High Order Differentials or Interpolation;
-  \item $l_1$ the minimum number of rounds to be secure against a Gr\"oebner basis cryptanalysis attack.
+  \item $l_1$ the minimum number of rounds to be secure against a Gr\"obner basis cryptanalysis attack.
 \end{itemize}
 
 Therefore, the most common instantiations of \texttt{Rescue} computed using the just explained formula are shown here in \autoref{tab:rescueinstances}:
@@ -236,7 +236,7 @@ Because the general structure is the same, also the number of rounds and state w
 \subsection{\textsc{Griffin}}\label{subsec:griffin}
 
 This primitive, born from the results collected by the designs of \texttt{GMiMC} and \texttt{Rescue}, is the union of both SPN and Feistel networks schemes.
-The structure on which \textsc{Griffin} has been built upon is called \textit{Horst} and is a revised version of Feistel networks, that grants a more robust defense against algebraic attacks \textsl{e.g.} Gr\"oebner basis attacks.
+The structure on which \textsc{Griffin} has been built upon is called \textit{Horst} and is a revised version of Feistel networks, that grants a more robust defense against algebraic attacks \textsl{e.g.} Gr\"obner basis attacks.
 
 The internal permutation function implemented for \textsc{Griffin} is called \textsc{Griffin-$\pi$} and has been designed to lower the minimum number of rounds while maintain a certain security level; this is achieved by the introduction of an exponentiation of very high degree on only one element of the state. This choice allows reducing the number of rounds without increasing too much the computational complexity and the number of constraints in the ZK proof.
 
@@ -285,7 +285,7 @@ In the \autoref{tab:griffininstances} are provided the most common instantiation
   n \ge \left\lceil 1.2 \cdot \max \left\{6, \left\lceil \frac{2.5 \cdot \kappa}{\log_2(p) - \log_2(d-1)} \right\rceil, 1 + n_{GB} \right\} \right\rceil ,
   \label{eq:griffinrounds}
 \end{equation}
-where $\kappa$ is the bits security level (in our case 128), $p$ is the prime used for the curve, $d$ is the exponent of the S-Box and $n_{GB}$ is the number of rounds needed to defend against Gr\"oebner basis attacks.
+where $\kappa$ is the bits' security level (in our case 128), $p$ is the prime used for the curve, $d$ is the exponent of the S-Box and $n_{GB}$ is the number of rounds needed to defend against Gr\"obner basis attacks.
 
 \begin{table}[H]
   \caption{\textsc{Griffin} instances for $d = 5$~\cite[Tab.~2]{griffin}.}\label{tab:griffininstances}
@@ -418,7 +418,7 @@ A single round through \texttt{Arion}, depicted in \autoref{fig:arion}, is compu
         \end{equation}
     \end{itemize}
   \item \textit{MixLayer} (M): matrix-vector multiplication between a fixed matrix and the state;
-  \item \textit{AddRoundConstant} (ARC): addition of the round constant $c^r_i$ to each element $x_i$ of the state, where $0 \le i < t$ is the element index, $t$ the state wisth and $r$ the number of the round.
+  \item \textit{AddRoundConstant} (ARC): addition of the round constant $c^r_i$ to each element $x_i$ of the state, where $0 \le i < t$ is the element index, $t$ the state width and $r$ the number of the round.
 \end{itemize}
 \begin{note}
   Note that in the \texttt{Arion} documentation~\cite{arion}, the last two operations are seen as a single layer called \textit{AffineLayer}~\cite[Def.~3]{arion}.
@@ -439,9 +439,9 @@ A single round through \texttt{Arion}, depicted in \autoref{fig:arion}, is compu
 \end{figure}
 
 Furthermore, a complete permutation in \texttt{Arion} is done with an initial application of the \textit{MixLayer} to the state and then the iteration of the round function for the number of rounds needed.
-The most common instantiations of \texttt{Arion} are shown in \autoref{tab:aneomiinstances}:
+The most common instantiations of \texttt{Arion} are shown in \autoref{tab:arioninstances}:
 \begin{table}[H]
-  \caption{\texttt{Arion} instances for $d_1 = 5$~\cite[Tab.~3]{arion}.}\label{tab:aneomiinstances}
+  \caption{\texttt{Arion} instances for $d_1 = 5$~\cite[Tab.~3]{arion}.}\label{tab:arioninstances}
   \begin{center}
     \begin{tabular}{|l|c|c|c|}
       \hline
@@ -467,7 +467,7 @@ There are two types of \textsf{Plonk} constraints:
   \item 3-wire-input constraints, which are of the form
     \begin{equation}
       (a \cdot b) \cdot q_M + a \cdot q_L + b \cdot q_R + c \cdot q_O + d \cdot q_F + q_C = 0 ,
-      \label{eq:2inconstraint}
+      \label{eq:3inconstraint}
     \end{equation}
 \end{itemize}
 where
@@ -475,9 +475,9 @@ where
   \item $a$ is the input value of the left variable and $b$ of the right variable;
   \item $c$ is the value of the output variable;
   \item $d$ is the fourth variable;
-  \item $q_M$, $q_L$, $q_R$, $q_O$, $q_F$ and $q_C$ are coefficients that select the operations to be performed, \textsl{i.e.} they enables the corresponding wires of the circuit. In the given order they are respectively the selectors for the multiplication, the left wire, the right wire, the output wire, the fourth wire and the constant.
+  \item $q_M$, $q_L$, $q_R$, $q_O$, $q_F$ and $q_C$ are coefficients that select the operations to be performed, \textsl{i.e.} they enable the corresponding wires of the circuit. In the given order they are respectively the selectors for the multiplication, the left wire, the right wire, the output wire, the fourth wire and the constant.
 \end{itemize}
-In this project have been used both 2-wire-input and 3-wire-input constraints to build the ZK proofs of the implemented primitives and because most of the permutation functions have some operations in common (\text{e.g.} \textit{AddRoundConstant}), we will provide here the explanations of how each implemented operation is represented in the \textsf{Plonk} constraint system.
+In this project both 2-wire-input and 3-wire-input constraints have been used to build the ZK proofs of the implemented primitives and because most of the permutation functions have some operations in common (\text{e.g.} \textit{AddRoundConstant}), we will provide here the explanations of how each implemented operation is represented in the \textsf{Plonk} constraint system.
 
 \subsection{AddRoundConstant}\label{subsec:arc}
 
@@ -846,14 +846,14 @@ In the third test type, we focused on the time needed to generate a zero-knowled
 For a better understanding of the results, we decided to assign the same color to \texttt{Anemoi} and \textsc{Griffin} and also to \texttt{Rescue} and \texttt{Rescue-Prime}, because their timings are so close that their curves are overlapping.
 
 As it is possible to evince from these results, the fastest primitive for this category of tests is \texttt{Arion}, immediately followed by \texttt{Anemoi} and \textsc{Griffin}.
-Nonetheless, considering that the latest two primitives work only with 3 out 5 possible state widths, their results is almost as good as \texttt{Arion}.
+Nonetheless, considering that the latest two primitives work only with 3 out 5 possible state widths, their results are almost as good as \texttt{Arion}.
 If we have to take also in consideration the stability of the results, \texttt{Arion} is a little unstable and whose behavior is closely related to the one of the plain performance test.
 
 On the other spectrum of the tests' results, \textsc{Poseidon} is the worst primitive in terms of proof generation as expected by the high number of constraints per permutation highlighted in the previous \autoref{sec:constraints}, almost doubling the time in the case of state width $t = 8$ respectively to average time of the other state widths' values.
 
 \section{Proof verification}\label{sec:proofver}
 
-In the last category of tests we focused on the verification process of the constraint generated in the Plonk syste, and the results have been pretty much the same, around $7.26\pm0.03\ [ms]$ independently of the state width, for all the primitives.
+In the last category of tests we focused on the verification process of the constraint generated in the Plonk system, and the results have been pretty much the same, around $7.26\pm0.03\ [ms]$ independently of the state width, for all the primitives.
 Due to these results, it has been decided to not show any table or plot like in the previous sections.
 
 \chapter{Conclusion}\label{chap:conclusion}
