@@ -1,5 +1,5 @@
 use aohashes::{encrypt, encrypt_gadget};
-// use core::time::Duration;
+use core::time::Duration;
 use criterion::{Criterion, black_box, criterion_group, criterion_main};
 use dusk_bls12_381::BlsScalar;
 use dusk_jubjub::{GENERATOR_EXTENDED, JubJubAffine, JubJubScalar};
@@ -11,7 +11,7 @@ use rand::SeedableRng;
 use rand::rngs::StdRng;
 
 // for gmimg and poseidon at least 12 if not more is needed
-const CAPACITY: usize = 11;
+const CAPACITY: usize = 12;
 
 const MESSAGE_LEN: usize = 2;
 
@@ -125,8 +125,8 @@ fn bench_encryption(c: &mut Criterion) {
 
 criterion_group! {
     name = benches;
-    config = Criterion::default().sample_size(10);
-    // config = Criterion::default().sample_size(1000).measurement_time(Duration::from_secs(800));
+    // config = Criterion::default().sample_size(10);
+    config = Criterion::default().sample_size(1000).measurement_time(Duration::from_secs(800));
     targets = bench_encryption
 }
 criterion_main!(benches);

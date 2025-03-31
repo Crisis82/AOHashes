@@ -7,7 +7,7 @@ use rand::SeedableRng;
 use rand::rngs::StdRng;
 
 // for gmimg and poseidon at least 12 if not more is needed
-const CAPACITY: usize = 11;
+const CAPACITY: usize = 12;
 
 #[allow(dead_code)]
 #[derive(Default)]
@@ -22,22 +22,45 @@ impl SpongeCircuit {
     }
 }
 
-impl Circuit for SpongeCircuit {
-    fn circuit(&self, composer: &mut Composer) -> Result<(), Error> {
-        let mut w_message = [Composer::ZERO; 4];
-        w_message
-            .iter_mut()
-            .zip(self.message)
-            .for_each(|(witness, scalar)| {
-                *witness = composer.append_witness(scalar);
-            });
+cfg_if::cfg_if! {
+    if #[cfg(feature = "anemoi")] {
+        impl Circuit for SpongeCircuit {
+            fn circuit(&self, composer: &mut Composer) -> Result<(), Error> {
+                let mut w_message = [Composer::ZERO; 4];
+                w_message
+                    .iter_mut()
+                    .zip(self.message)
+                    .for_each(|(witness, scalar)| {
+                        *witness = composer.append_witness(scalar);
+                    });
 
-        let _output_witness =
-            HashGadget::digest(composer, Domain::Merkle4, &w_message);
-        // composer.assert_equal_constant(output_witness[0], 0,
-        // Some(self.output));
+                let _output_witness =
+                    HashGadget::digest(composer, Domain::Merkle4, &w_message);
+                // composer.assert_equal_constant(output_witness[0], 0,
+                // Some(self.output));
 
-        Ok(())
+                Ok(())
+            }
+        }
+    } else {
+        impl Circuit for SpongeCircuit {
+            fn circuit(&self, composer: &mut Composer) -> Result<(), Error> {
+                let mut w_message = [Composer::ZERO; 4];
+                w_message
+                    .iter_mut()
+                    .zip(self.message)
+                    .for_each(|(witness, scalar)| {
+                        *witness = composer.append_witness(scalar);
+                    });
+
+                let output_witness =
+                    HashGadget::digest(composer, Domain::Merkle4, &w_message);
+                composer.assert_equal_constant(output_witness[0], 0,
+                Some(self.output));
+
+                Ok(())
+            }
+        }
     }
 }
 
