@@ -113,7 +113,7 @@ impl<'a> AnemoiHash<Witness> for GadgetPermutation<'a> {
                 .a(state[i + L])
                 .right(-BlsScalar::from(1))
                 .b(witness_v);
-            let yv = self.composer.gate_mul(constraint);
+            let yv = self.composer.gate_add(constraint);
             // yv^2
             let constraint = Constraint::new().mult(1).a(yv).b(yv);
             let power2 = self.composer.gate_mul(constraint);

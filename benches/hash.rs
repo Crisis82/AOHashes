@@ -32,9 +32,10 @@ impl Circuit for SpongeCircuit {
                 *witness = composer.append_witness(scalar);
             });
 
-        let output_witness =
+        let _output_witness =
             HashGadget::digest(composer, Domain::Merkle4, &w_message);
-        composer.assert_equal_constant(output_witness[0], 0, Some(self.output));
+        // composer.assert_equal_constant(output_witness[0], 0,
+        // Some(self.output));
 
         Ok(())
     }

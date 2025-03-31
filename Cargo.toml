@@ -4,7 +4,6 @@ version = "0.1.0"
 description = "Implementation of Arimethization-Oriented Hashing functions over the BLS12-381 curve, using Dusk-Plonk library for zk proofs."
 categories = ["algorithms", "cryptography", "no-std", "wasm"]
 keywords = ["cryptography", "zero-knowledge", "crypto"]
-
 repository = "https://github.com/Crisis82/ao-hashes/"
 edition = "2024"
 
@@ -23,7 +22,7 @@ ff = {version = "0.13", optional = true}
 rand = {version = "0.8.5", default-features = false, features = ["getrandom", "std_rng"], optional = true}
 
 [dev-dependencies]
-criterion = "0.5"
+criterion = "0.5.1"
 dusk-bytes = "0.1"
 once_cell = "1"
 rand = {version = "0.8.5", default-features = false, features = ["getrandom", "std_rng"]}
